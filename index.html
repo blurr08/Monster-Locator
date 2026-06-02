@@ -29,27 +29,24 @@
             -webkit-tap-highlight-color: transparent;
         }
 
-        /* Map layer */
         #map {
             position: fixed;
             inset: 0;
             z-index: 1;
             filter: grayscale(20%) contrast(1.08);
         }
-        /* Monochrome tile effect (darker) */
+
         .leaflet-tile {
             filter: grayscale(100%) !important;
             opacity: 0.95;
         }
 
-        /* Custom popup styling */
         .leaflet-popup-content-wrapper {
             background: #141414 !important;
             color: #f0f0f0 !important;
             border-radius: 20px !important;
             border: 1px solid #2c2c2c !important;
             box-shadow: 0 20px 40px rgba(0,0,0,0.7) !important;
-            font-family: inherit !important;
         }
         .leaflet-popup-tip {
             background: #141414 !important;
@@ -60,7 +57,6 @@
             font-size: 18px !important;
         }
 
-        /* --- SIDEBAR (compact, Dhule-only) --- */
         #sidebar {
             position: fixed;
             z-index: 15;
@@ -69,9 +65,8 @@
             transform: translateY(-50%);
             width: 340px;
             max-height: calc(100vh - 48px);
-            background: #111111;
-            backdrop-filter: blur(2px);
             background: rgba(17, 17, 17, 0.96);
+            backdrop-filter: blur(2px);
             border: 1px solid #2a2a2a;
             border-radius: 28px;
             box-shadow: 0 25px 50px -12px rgba(0,0,0,0.6);
@@ -87,7 +82,6 @@
             pointer-events: none;
         }
 
-        /* header area */
         .sidebar-header {
             padding: 22px 20px 14px 22px;
             border-bottom: 1px solid #242424;
@@ -114,7 +108,6 @@
             font-size: 0.72rem;
             color: #aaa;
             margin-top: 6px;
-            letter-spacing: 0.2px;
         }
         .city-badge {
             display: inline-flex;
@@ -131,10 +124,8 @@
         }
         .city-badge strong {
             color: #ffd966;
-            font-weight: 700;
         }
 
-        /* location list area (single spot) */
         .spot-container {
             flex: 1;
             overflow-y: auto;
@@ -147,11 +138,6 @@
             padding: 16px 18px;
             transition: all 0.2s;
             box-shadow: 0 6px 12px rgba(0,0,0,0.2);
-        }
-        .monster-card:hover {
-            background: #202020;
-            border-color: #3d3d3d;
-            transform: translateY(-2px);
         }
         .spot-name {
             font-size: 1.1rem;
@@ -166,16 +152,12 @@
             font-size: 0.65rem;
             padding: 3px 8px;
             border-radius: 30px;
-            letter-spacing: 0.3px;
             color: #ffd966;
         }
         .address-detail {
             font-size: 0.8rem;
             color: #aaa;
             margin: 8px 0 6px;
-            display: flex;
-            gap: 12px;
-            align-items: center;
         }
         .coords-text {
             font-family: monospace;
@@ -222,7 +204,6 @@
             backdrop-filter: blur(2px);
         }
 
-        /* sidebar footer */
         .sidebar-footer {
             padding: 12px 16px 18px;
             border-top: 1px solid #242424;
@@ -256,7 +237,6 @@
             background: #2a2a2a;
         }
 
-        /* Floating buttons */
         .fab {
             position: fixed;
             z-index: 20;
@@ -287,7 +267,6 @@
             bottom: 150px;
         }
 
-        /* Toast notification */
         .toast-notify {
             position: fixed;
             z-index: 120;
@@ -319,45 +298,37 @@
             font-size: 1rem;
         }
 
-        /* Permission request prompt */
-        .permission-prompt {
+        .location-status {
             position: fixed;
-            z-index: 200;
-            bottom: 140px;
-            left: 50%;
-            transform: translateX(-50%);
+            z-index: 15;
+            top: 20px;
+            right: 20px;
             background: #1a1a1a;
             border: 1px solid #ffd966;
-            border-radius: 60px;
-            padding: 12px 20px;
+            border-radius: 40px;
+            padding: 8px 16px;
+            font-size: 0.7rem;
             display: flex;
             align-items: center;
-            gap: 12px;
-            font-size: 0.8rem;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.6);
+            gap: 8px;
             backdrop-filter: blur(10px);
-            white-space: nowrap;
-            cursor: pointer;
-            transition: all 0.3s;
+            pointer-events: none;
         }
-        .permission-prompt button {
-            background: #ffd966;
-            border: none;
-            padding: 6px 16px;
-            border-radius: 40px;
-            font-weight: bold;
-            cursor: pointer;
-            color: #000;
-            font-family: inherit;
+        .location-status .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #ff4444;
+            animation: pulse 1.5s infinite;
         }
-        .permission-prompt button:hover {
-            background: #ffed4a;
+        .location-status .dot.active {
+            background: #4caf50;
         }
-        .hidden {
-            display: none;
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
         }
 
-        /* modal */
         .modal-overlay {
             position: fixed;
             inset: 0;
@@ -398,7 +369,6 @@
             cursor: pointer;
         }
 
-        /* Responsive */
         @media (max-width: 640px) {
             #sidebar {
                 left: 12px;
@@ -420,12 +390,6 @@
             .brand {
                 font-size: 1.35rem;
             }
-            .spot-container {
-                padding: 10px 12px;
-            }
-            .monster-card {
-                padding: 12px 14px;
-            }
             .fab {
                 width: 42px;
                 height: 42px;
@@ -437,11 +401,11 @@
             #fab-toggle-sidebar {
                 bottom: 122px;
             }
-            .permission-prompt {
-                bottom: 100px;
-                white-space: normal;
-                text-align: center;
-                padding: 10px 16px;
+            .location-status {
+                top: 10px;
+                right: 10px;
+                font-size: 0.6rem;
+                padding: 5px 12px;
             }
         }
     </style>
@@ -450,7 +414,11 @@
 
 <div id="map"></div>
 
-<!-- Sidebar (Dhule exclusive) -->
+<div class="location-status" id="locationStatus">
+    <span class="dot" id="statusDot"></span>
+    <span id="statusText">Location off</span>
+</div>
+
 <aside id="sidebar">
     <div class="sidebar-header">
         <div class="brand">
@@ -461,8 +429,8 @@
             📍 <strong>Dhule</strong> | 20°53'32.18"N 74°46'26.13"E
         </div>
     </div>
-    <div class="spot-container" id="spot-list">
-        <div class="monster-card" id="dhule-spot-card">
+    <div class="spot-container">
+        <div class="monster-card">
             <div class="spot-name">
                 🛒 Monster Energy Hub <span>DHULE</span>
             </div>
@@ -480,40 +448,30 @@
     </div>
     <div class="sidebar-footer">
         <button class="side-btn" id="refreshBtn">🔄 Refresh</button>
-        <button class="side-btn primary" id="locateMeBtn">📍 My Location</button>
+        <button class="side-btn primary" id="locateMeBtn">📍 Get My Location</button>
     </div>
 </aside>
 
-<!-- Toast message -->
 <div id="globalToast" class="toast-notify">
     <span>🦖</span>
     <span id="toastMsg">Monster spot in Dhule!</span>
     <span class="toast-close" id="closeToastBtn">✕</span>
 </div>
 
-<!-- Permission prompt (appears if location denied or not yet granted) -->
-<div id="permissionPrompt" class="permission-prompt hidden">
-    <span>📍</span>
-    <span>Enable location to see distance from Monster spot</span>
-    <button id="requestPermissionBtn">Allow</button>
-</div>
-
-<!-- Modal -->
 <div id="addModal" class="modal-overlay">
     <div class="modal-card">
         <h3>📍 Dhule Exclusive Location</h3>
-        <p style="font-size:0.85rem; margin:10px 0;">This map focuses on the <strong>Dhule city</strong> Monster spot. Enable location services to see how far you are from the monster energy hub!</p>
+        <p style="font-size:0.85rem; margin:10px 0;">This map shows the Monster Energy spot in <strong>Dhule, Maharashtra</strong>.</p>
+        <p style="font-size:0.8rem; margin:10px 0;">Click <strong>"Get My Location"</strong> to see how far you are from the spot!</p>
         <div class="modal-buttons">
             <button id="modalCloseBtn" style="background:#2c2c2c; color:white;">Got it</button>
         </div>
     </div>
 </div>
 
-<!-- Floating buttons -->
 <button id="fab-toggle-sidebar" class="fab" title="Toggle Sidebar">🗂️</button>
-<button id="fab-locate" class="fab" title="Find my location">📍</button>
+<button id="fab-locate" class="fab" title="Get my location">📍</button>
 
-<!-- Leaflet JS -->
 <script
     src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
@@ -532,6 +490,7 @@
         let mainMarker = null;
         let userMarker = null;
         let userLocation = null;
+        let watchId = null;
         
         // DOM elements
         const sidebar = document.getElementById('sidebar');
@@ -546,8 +505,8 @@
         const closeToast = document.getElementById('closeToastBtn');
         const modalOverlay = document.getElementById('addModal');
         const modalClose = document.getElementById('modalCloseBtn');
-        const permissionPrompt = document.getElementById('permissionPrompt');
-        const requestPermissionBtn = document.getElementById('requestPermissionBtn');
+        const statusDot = document.getElementById('statusDot');
+        const statusText = document.getElementById('statusText');
         
         let toastTimeout = null;
         
@@ -560,12 +519,16 @@
             }, duration);
         }
         
-        function closeAddModal() {
-            modalOverlay.classList.remove('active');
-        }
-        
-        function openInfoModal() {
-            modalOverlay.classList.add('active');
+        function updateStatusUI(hasLocation) {
+            if (hasLocation && userLocation) {
+                statusDot.classList.add('active');
+                statusText.textContent = '📍 Location active';
+                statusDot.style.background = '#4caf50';
+            } else {
+                statusDot.classList.remove('active');
+                statusText.textContent = '📍 Location off';
+                statusDot.style.background = '#ff4444';
+            }
         }
         
         function formatDistance(meters) {
@@ -574,7 +537,7 @@
             return (meters / 1000).toFixed(1) + ' km';
         }
         
-        function getDistanceFromUser() {
+        function calculateDistanceToDhule() {
             if (!userLocation) return null;
             const lat1 = userLocation.lat, lng1 = userLocation.lng;
             const R = 6371000;
@@ -589,14 +552,12 @@
         
         function updateDistanceUI() {
             if (userLocation) {
-                const dist = getDistanceFromUser();
+                const dist = calculateDistanceToDhule();
                 if (dist !== null) {
-                    distanceLabel.innerText = `📍 ${formatDistance(dist)} away`;
-                } else {
-                    distanceLabel.innerText = `📍 distance unknown`;
+                    distanceLabel.innerHTML = `📍 ${formatDistance(dist)} away`;
                 }
             } else {
-                distanceLabel.innerText = `📍 enable location to see distance`;
+                distanceLabel.innerHTML = `📍 click "Get My Location"`;
             }
         }
         
@@ -612,6 +573,7 @@
                     justify-content:center;
                     font-size:1.2rem;
                     box-shadow:0 0 0 4px rgba(0,0,0,0.4), 0 4px 12px black;
+                    cursor:pointer;
                 ">🦖</div>
             `;
             return L.divIcon({
@@ -624,13 +586,12 @@
         }
         
         function createUserIcon() {
-            const html = `<div style="width:18px;height:18px;background:#ffffff;border-radius:50%;border:3px solid #000;box-shadow:0 0 0 6px rgba(255,255,255,0.2), 0 0 0 12px rgba(255,255,200,0.1);animation:pulseRing 1.8s infinite;"></div>
-            <style>@keyframes pulseRing { 0% { box-shadow: 0 0 0 0px rgba(255,255,255,0.4); } 100% { box-shadow: 0 0 0 12px rgba(255,255,255,0); } }</style>`;
+            const html = `<div style="width:20px;height:20px;background:#4285f4;border-radius:50%;border:3px solid white;box-shadow:0 0 0 4px rgba(66,133,244,0.3);"></div>`;
             return L.divIcon({
                 html: html,
                 className: 'user-dot',
-                iconSize: [18,18],
-                iconAnchor: [9,9]
+                iconSize: [20,20],
+                iconAnchor: [10,10]
             });
         }
         
@@ -656,111 +617,111 @@
                 const userIcon = createUserIcon();
                 userMarker = L.marker([userLocation.lat, userLocation.lng], { icon: userIcon, zIndexOffset: 1000 })
                     .addTo(map)
-                    .bindPopup('<b>📍 You are here</b><br/>⚡ Grab a Monster soon!');
+                    .bindPopup('<b>📍 You are here</b><br/>⚡ Ready for Monster Energy?');
             }
         }
         
         function flyToDhule() {
             if (!map) return;
-            map.flyTo([DHULE_LAT, DHULE_LNG], 17, { duration: 1.4 });
+            map.flyTo([DHULE_LAT, DHULE_LNG], 16, { duration: 1.2 });
             setTimeout(() => {
                 if (mainMarker) {
                     mainMarker.openPopup();
-                    const el = mainMarker.getElement();
-                    if (el) {
-                        el.style.transform = 'scale(1.3)';
-                        setTimeout(() => { if(el) el.style.transform = ''; }, 400);
-                    }
                 }
             }, 300);
+            showToast("✈️ Flying to Monster spot in Dhule!", 2000);
         }
         
-        // Main geolocation function with improved error handling
-        function requestLocation(showToastMsg = true, showPermissionPrompt = true) {
+        // This function will trigger the browser's geolocation prompt
+        function getLocationWithPrompt(showSuccessToast = true) {
             if (!navigator.geolocation) {
-                if (showToastMsg) showToast("⚠️ Geolocation is not supported by your browser", 3000);
-                permissionPrompt.classList.add('hidden');
+                showToast("⚠️ Your browser doesn't support geolocation", 3000);
                 return;
             }
             
-            // Check if permission was previously denied
-            if (navigator.permissions && navigator.permissions.query) {
-                navigator.permissions.query({ name: 'geolocation' }).then((result) => {
-                    if (result.state === 'denied') {
-                        if (showPermissionPrompt) {
-                            permissionPrompt.classList.remove('hidden');
-                        }
-                        if (showToastMsg) {
-                            showToast("📍 Location permission denied. Click 'Allow' to enable location services.", 4000);
-                        }
-                        return;
-                    } else if (result.state === 'granted') {
-                        permissionPrompt.classList.add('hidden');
-                        getCurrentPosition(showToastMsg);
-                    } else {
-                        // prompt state - try to get location, browser will ask
-                        getCurrentPosition(showToastMsg);
-                    }
-                }).catch(() => {
-                    // Fallback if permissions API not supported
-                    getCurrentPosition(showToastMsg);
-                });
-            } else {
-                getCurrentPosition(showToastMsg);
-            }
-        }
-        
-        function getCurrentPosition(showToastMsg) {
+            // Show loading state
+            showToast("📍 Requesting location permission...", 2000);
+            statusText.textContent = '📍 Requesting...';
+            
+            // Try to get current position - this will trigger browser prompt
             navigator.geolocation.getCurrentPosition(
-                (pos) => {
-                    // Success - hide permission prompt
-                    permissionPrompt.classList.add('hidden');
+                (position) => {
+                    // Success - browser prompt was allowed
                     userLocation = {
-                        lat: pos.coords.latitude,
-                        lng: pos.coords.longitude,
+                        lat: position.coords.latitude,
+                        lng: position.coords.longitude
                     };
+                    
                     renderUserMarker();
                     updateDistanceUI();
+                    updateStatusUI(true);
                     
-                    // Fit bounds to show both user and Dhule
-                    const bounds = L.latLngBounds([userLocation.lat, userLocation.lng], [DHULE_LAT, DHULE_LNG]);
+                    // Fit map to show both user and Dhule
+                    const bounds = L.latLngBounds(
+                        [userLocation.lat, userLocation.lng],
+                        [DHULE_LAT, DHULE_LNG]
+                    );
                     map.fitBounds(bounds, { padding: [50, 50] });
                     
-                    if (showToastMsg) {
-                        const dist = getDistanceFromUser();
-                        const distStr = dist ? formatDistance(dist) : "unknown";
-                        showToast(`📍 Location found! You are ${distStr} from the Monster spot in Dhule. 🦖`, 4000);
+                    const distance = calculateDistanceToDhule();
+                    const distStr = distance ? formatDistance(distance) : "unknown";
+                    
+                    if (showSuccessToast) {
+                        showToast(`✅ Location found! You are ${distStr} from the Monster spot in Dhule! 🦖`, 5000);
                     }
+                    
+                    // Start watching position for updates
+                    if (watchId) {
+                        navigator.geolocation.clearWatch(watchId);
+                    }
+                    watchId = navigator.geolocation.watchPosition(
+                        (newPos) => {
+                            userLocation = {
+                                lat: newPos.coords.latitude,
+                                lng: newPos.coords.longitude
+                            };
+                            renderUserMarker();
+                            updateDistanceUI();
+                        },
+                        (err) => {
+                            console.warn("Watch error:", err);
+                        },
+                        { enableHighAccuracy: true, maximumAge: 10000 }
+                    );
                 },
-                (err) => {
-                    console.warn("Geolocation error:", err.code, err.message);
+                (error) => {
+                    // Handle different error cases
+                    console.error("Geolocation error:", error.code, error.message);
                     let errorMessage = "";
-                    switch(err.code) {
+                    
+                    switch(error.code) {
                         case 1: // PERMISSION_DENIED
-                            errorMessage = "Location permission denied. Click 'Allow' on the prompt or use the button below.";
-                            permissionPrompt.classList.remove('hidden');
+                            errorMessage = "❌ Location permission denied. Please allow location access in your browser settings and try again.";
                             break;
                         case 2: // POSITION_UNAVAILABLE
-                            errorMessage = "Location information unavailable. Using default view.";
-                            permissionPrompt.classList.add('hidden');
+                            errorMessage = "📍 Location unavailable. Please check your device's location services.";
                             break;
                         case 3: // TIMEOUT
-                            errorMessage = "Location request timed out. Please try again.";
-                            permissionPrompt.classList.add('hidden');
+                            errorMessage = "⏰ Location request timed out. Please try again.";
                             break;
                         default:
-                            errorMessage = "Unable to get your location.";
-                            permissionPrompt.classList.add('hidden');
+                            errorMessage = "⚠️ Could not get your location. Please try again.";
                     }
-                    if (showToastMsg) {
-                        showToast(`⚠️ ${errorMessage}`, 4500);
-                    }
+                    
+                    showToast(errorMessage, 6000);
+                    updateStatusUI(false);
+                    statusText.textContent = '📍 Location denied';
+                    
                     // Center on Dhule as fallback
                     if (map && !userLocation) {
-                        map.setView([DHULE_LAT, DHULE_LNG], 14);
+                        map.setView([DHULE_LAT, DHULE_LNG], 13);
                     }
                 },
-                { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
+                {
+                    enableHighAccuracy: true,
+                    timeout: 15000,
+                    maximumAge: 0  // Don't use cached position
+                }
             );
         }
         
@@ -769,20 +730,12 @@
             if (userLocation) {
                 renderUserMarker();
                 updateDistanceUI();
+                updateStatusUI(true);
             } else {
-                distanceLabel.innerText = `📍 enable location to see distance`;
+                distanceLabel.innerHTML = `📍 click "Get My Location"`;
+                updateStatusUI(false);
             }
-            showToast("🔄 Refreshed • Dhule spot remains", 1800);
-        }
-        
-        function disableAddingSpots() {
-            if (map) {
-                map.off('dblclick');
-                map.on('dblclick', () => {
-                    openInfoModal();
-                    showToast("📍 Only Dhule Monster spot is available on this map.", 2500);
-                });
-            }
+            showToast("🔄 Map refreshed", 1500);
         }
         
         function initMap() {
@@ -796,29 +749,29 @@
             L.control.zoom({ position: 'bottomright' }).addTo(map);
             renderDhuleMarker();
             updateDistanceUI();
-            disableAddingSpots();
+            updateStatusUI(false);
             
-            // Try to get location without showing toast on initial load
-            setTimeout(() => {
-                requestLocation(false, false);
-            }, 500);
+            // Disable double-click add spot
+            map.on('dblclick', () => {
+                modalOverlay.classList.add('active');
+                setTimeout(() => {
+                    modalOverlay.classList.remove('active');
+                }, 3000);
+            });
         }
         
-        // Event bindings
+        // Event listeners
         function bindEvents() {
-            flyBtn.addEventListener('click', () => {
-                flyToDhule();
-                showToast("✈️ Flying to Monster spot in Dhule!", 2000);
-            });
+            flyBtn.addEventListener('click', flyToDhule);
             
             locateMeBtn.addEventListener('click', () => {
-                requestLocation(true, true);
+                getLocationWithPrompt(true);
             });
             
             refreshBtn.addEventListener('click', refreshUI);
             
             fabLocate.addEventListener('click', () => {
-                requestLocation(true, true);
+                getLocationWithPrompt(true);
             });
             
             fabToggle.addEventListener('click', () => {
@@ -837,25 +790,24 @@
                 toastDiv.classList.remove('show');
             });
             
-            modalClose.addEventListener('click', closeAddModal);
-            modalOverlay.addEventListener('click', (e) => {
-                if (e.target === modalOverlay) closeAddModal();
+            modalClose.addEventListener('click', () => {
+                modalOverlay.classList.remove('active');
             });
             
-            // Permission request button
-            requestPermissionBtn.addEventListener('click', () => {
-                permissionPrompt.classList.add('hidden');
-                requestLocation(true, false);
+            modalOverlay.addEventListener('click', (e) => {
+                if (e.target === modalOverlay) {
+                    modalOverlay.classList.remove('active');
+                }
             });
             
             // Keyboard shortcuts
             document.addEventListener('keydown', (e) => {
                 if (e.key === 'Escape' && modalOverlay.classList.contains('active')) {
-                    closeAddModal();
+                    modalOverlay.classList.remove('active');
                 }
                 if (e.ctrlKey && e.shiftKey && e.key === 'L') {
                     e.preventDefault();
-                    requestLocation(true, true);
+                    getLocationWithPrompt(true);
                 }
                 if (e.ctrlKey && e.shiftKey && e.key === 'B') {
                     e.preventDefault();
@@ -871,11 +823,12 @@
         initMap();
         bindEvents();
         
+        // Show welcome message
         setTimeout(() => {
-            showToast(`🦖 Monster Energy • Dhule, Maharashtra • Tap📍 to see your distance`, 5000);
+            showToast(`🦖 Welcome to Monster Energy Dhule! Click "Get My Location" to see your distance.`, 5000);
         }, 1000);
         
-        console.log("✅ Monster Finder — DHULE EDITION with improved location handling");
+        console.log("✅ Monster Finder - Dhule Edition | Click 'Get My Location' to trigger browser permission prompt");
     })();
 </script>
 </body>
