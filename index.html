@@ -3,640 +3,262 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Monster Energy • Dhule (2 Locations)</title>
+    <title>Monster Energy • Dhule, Maharashtra — Route to Spot</title>
+    <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <!-- Leaflet Routing Machine CSS & JS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
+    <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: 'Segoe UI', system-ui, sans-serif;
+            font-family: 'Segoe UI', 'Inter', system-ui, sans-serif;
             background: #0a0a0a;
             color: #e8e8e8;
             height: 100vh;
+            width: 100vw;
             overflow: hidden;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
         }
-        #map {
-            position: fixed;
-            inset: 0;
-            z-index: 1;
-            filter: grayscale(20%) contrast(1.08);
-        }
-        .leaflet-tile {
-            filter: grayscale(100%) !important;
-            opacity: 0.95;
-        }
-        .leaflet-popup-content-wrapper {
-            background: #141414 !important;
-            color: #f0f0f0 !important;
-            border-radius: 20px !important;
-            border: 1px solid #2c2c2c !important;
-        }
-        .leaflet-popup-tip {
-            background: #141414 !important;
-        }
-        /* Sidebar */
+        #map { position: fixed; inset: 0; z-index: 1; filter: grayscale(20%) contrast(1.08); }
+        .leaflet-tile { filter: grayscale(100%) !important; opacity: 0.95; }
+        .leaflet-popup-content-wrapper { background: #141414 !important; color: #f0f0f0 !important; border-radius: 20px !important; border: 1px solid #2c2c2c !important; }
+        .leaflet-popup-tip { background: #141414 !important; }
         #sidebar {
-            position: fixed;
-            z-index: 15;
-            left: 18px;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 360px;
-            max-height: calc(100vh - 48px);
-            background: rgba(17, 17, 17, 0.96);
-            backdrop-filter: blur(2px);
-            border: 1px solid #2a2a2a;
-            border-radius: 28px;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            transition: transform 0.3s ease;
+            position: fixed; z-index: 15; left: 18px; top: 50%; transform: translateY(-50%);
+            width: 340px; max-height: calc(100vh - 48px);
+            background: rgba(17, 17, 17, 0.96); backdrop-filter: blur(2px);
+            border: 1px solid #2a2a2a; border-radius: 28px;
+            display: flex; flex-direction: column; overflow: hidden;
+            transition: transform 0.3s cubic-bezier(0.2,0.9,0.4,1.1), opacity 0.25s;
         }
-        #sidebar.collapsed {
-            transform: translateY(-50%) translateX(-120%);
-            opacity: 0;
-            pointer-events: none;
+        #sidebar.collapsed { transform: translateY(-50%) translateX(-120%); opacity: 0; pointer-events: none; }
+        .sidebar-header { padding: 22px 20px 14px 22px; border-bottom: 1px solid #242424; }
+        .brand { font-size: 1.65rem; font-weight: 800; display: flex; align-items: center; gap: 10px; color: #fff; }
+        .brand span:first-child { font-size: 2rem; animation: subtlePulse 2s infinite ease; }
+        @keyframes subtlePulse { 0%,100%{transform:scale(1);} 50%{transform:scale(1.1);} }
+        .tagline { font-size: 0.72rem; color: #aaa; margin-top: 6px; }
+        .city-badge { display: inline-flex; align-items: center; gap: 5px; background: #1e1e1e; margin-top: 10px; padding: 5px 14px; border-radius: 40px; font-size: 0.7rem; }
+        .spot-container { flex: 1; overflow-y: auto; padding: 14px 16px; display: flex; flex-direction: column; gap: 18px; }
+        .monster-card { background: #181818; border: 1px solid #2c2c2c; border-radius: 24px; padding: 16px 18px; }
+        .spot-name { font-size: 1.1rem; font-weight: 700; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .spot-name span { background: #2c2c2c; font-size: 0.65rem; padding: 3px 8px; border-radius: 30px; color: #ffd966; }
+        .address-detail { font-size: 0.8rem; color: #aaa; margin: 8px 0 6px; }
+        .coords-text { font-family: monospace; font-size: 0.68rem; background: #0f0f0f; padding: 4px 8px; border-radius: 12px; display: inline-block; }
+        .action-row { display: flex; justify-content: space-between; align-items: center; margin-top: 16px; gap: 8px; flex-wrap: wrap; }
+        .btn-fly, .btn-route {
+            background: #2a2a2a; border: none; color: white; font-weight: 600;
+            padding: 8px 16px; border-radius: 40px; font-size: 0.75rem;
+            cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; gap: 6px;
+            font-family: inherit; border: 0.5px solid #3e3e3e;
         }
-        .sidebar-header {
-            padding: 22px 20px 14px 22px;
-            border-bottom: 1px solid #242424;
-        }
-        .brand {
-            font-size: 1.65rem;
-            font-weight: 800;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .brand span:first-child {
-            font-size: 2rem;
-            animation: subtlePulse 2s infinite ease;
-        }
-        @keyframes subtlePulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-        }
-        .tagline {
-            font-size: 0.72rem;
-            color: #aaa;
-            margin-top: 6px;
-        }
-        .city-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            background: #1e1e1e;
-            margin-top: 10px;
-            padding: 5px 14px;
-            border-radius: 40px;
-            font-size: 0.7rem;
-        }
-        .city-badge strong { color: #ffd966; }
-        .spot-container {
-            flex: 1;
-            overflow-y: auto;
-            padding: 12px 16px;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-        .monster-card {
-            background: #181818;
-            border: 1px solid #2c2c2c;
-            border-radius: 24px;
-            padding: 16px 18px;
-            transition: 0.2s;
-        }
-        .monster-card:hover {
-            background: #202020;
-            transform: translateY(-2px);
-        }
-        .spot-name {
-            font-size: 1rem;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-        .spot-name span {
-            background: #2c2c2c;
-            font-size: 0.65rem;
-            padding: 3px 8px;
-            border-radius: 30px;
-            color: #ffd966;
-        }
-        .address-detail {
-            font-size: 0.75rem;
-            color: #aaa;
-            margin: 8px 0 4px;
-        }
-        .coords-text {
-            font-family: monospace;
-            font-size: 0.65rem;
-            background: #0f0f0f;
-            padding: 4px 8px;
-            border-radius: 12px;
-            display: inline-block;
-            margin-top: 6px;
-            color: #bbb;
-        }
-        .action-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: 14px;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-        .btn-take-me {
-            background: #2a6e3c;
-            border: none;
-            color: white;
-            font-weight: 600;
-            padding: 8px 18px;
-            border-radius: 40px;
-            font-size: 0.75rem;
-            cursor: pointer;
-            transition: 0.2s;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            font-family: inherit;
-        }
-        .btn-take-me:hover {
-            background: #3a8e4c;
-            transform: scale(0.98);
-        }
-        .distance-info {
-            font-size: 0.7rem;
-            background: #00000040;
-            padding: 4px 12px;
-            border-radius: 50px;
-        }
-        .sidebar-footer {
-            padding: 12px 16px 18px;
-            border-top: 1px solid #242424;
-            display: flex;
-            gap: 12px;
-        }
-        .side-btn {
-            flex: 1;
-            background: #1c1c1c;
-            border: 1px solid #303030;
-            border-radius: 40px;
-            padding: 11px 0;
-            font-weight: 600;
-            font-size: 0.75rem;
-            color: #ddd;
-            cursor: pointer;
-            text-align: center;
-        }
-        .side-btn.primary {
-            background: #ffffff;
-            color: #000;
-            font-weight: 700;
-        }
-        .fab {
-            position: fixed;
-            z-index: 20;
-            right: 18px;
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
-            background: #111111dd;
-            backdrop-filter: blur(8px);
-            border: 1px solid #3a3a3a;
-            color: white;
-            font-size: 1.3rem;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 6px 14px rgba(0,0,0,0.5);
-        }
+        .btn-route { background: #1e3a5f; border-color: #2c5a8c; }
+        .btn-route:hover { background: #2c5a8c; transform: scale(0.98); }
+        .btn-fly:hover { background: #3a3a3a; transform: scale(0.98); }
+        .distance-info { font-size: 0.7rem; background: #00000040; padding: 4px 12px; border-radius: 50px; backdrop-filter: blur(2px); }
+        .sidebar-footer { padding: 12px 16px 18px; border-top: 1px solid #242424; display: flex; gap: 12px; }
+        .side-btn { flex: 1; background: #1c1c1c; border: 1px solid #303030; border-radius: 40px; padding: 11px 0; font-weight: 600; font-size: 0.75rem; color: #ddd; cursor: pointer; text-align: center; }
+        .side-btn.primary { background: #ffffff; color: #000; border-color: #ffffff; font-weight: 700; }
+        .fab { position: fixed; z-index: 20; right: 18px; width: 48px; height: 48px; border-radius: 50%; background: #111111dd; backdrop-filter: blur(8px); border: 1px solid #3a3a3a; color: white; font-size: 1.3rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
         #fab-locate { bottom: 90px; }
         #fab-toggle-sidebar { bottom: 150px; }
-        .toast-notify {
-            position: fixed;
-            z-index: 120;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%) translateY(120px);
-            background: #1f1f1f;
-            backdrop-filter: blur(12px);
-            border: 1px solid #3a3a3a;
-            border-radius: 60px;
-            padding: 12px 24px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            font-weight: 600;
-            font-size: 0.85rem;
-            transition: transform 0.4s cubic-bezier(0.2, 0.9, 0.4, 1.1);
-            white-space: nowrap;
-        }
+        .toast-notify { position: fixed; z-index: 120; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(120px); background: #1f1f1f; backdrop-filter: blur(12px); border-radius: 60px; padding: 12px 24px; display: flex; gap: 12px; font-weight: 600; transition: transform 0.4s; white-space: nowrap; }
         .toast-notify.show { transform: translateX(-50%) translateY(0); }
-        .toast-close { margin-left: 8px; opacity: 0.6; cursor: pointer; }
-        .location-status {
-            position: fixed;
-            z-index: 15;
-            top: 20px;
-            right: 20px;
-            background: #1a1a1a;
-            border: 1px solid #ffd966;
-            border-radius: 40px;
-            padding: 8px 16px;
-            font-size: 0.7rem;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            backdrop-filter: blur(10px);
-            pointer-events: none;
-        }
-        .dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: #ff4444;
-        }
-        .dot.active { background: #4caf50; }
-        .modal-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.8);
-            backdrop-filter: blur(6px);
-            z-index: 60;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            opacity: 0;
-            pointer-events: none;
-            transition: 0.25s;
-        }
+        .location-status { position: fixed; z-index: 15; top: 20px; right: 20px; background: #1a1a1a; border: 1px solid #ffd966; border-radius: 40px; padding: 8px 16px; font-size: 0.7rem; display: flex; align-items: center; gap: 8px; backdrop-filter: blur(10px); pointer-events: none; }
+        .location-status .dot { width: 8px; height: 8px; border-radius: 50%; background: #ff4444; animation: pulse 1.5s infinite; }
+        .location-status .dot.active { background: #4caf50; }
+        @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.4;} }
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(6px); z-index: 60; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: 0.25s; }
         .modal-overlay.active { opacity: 1; pointer-events: auto; }
-        .modal-card {
-            background: #151515;
-            border: 1px solid #2e2e2e;
-            border-radius: 32px;
-            width: 90%;
-            max-width: 360px;
-            padding: 24px 22px;
-            text-align: center;
-        }
+        .modal-card { background: #151515; border: 1px solid #2e2e2e; border-radius: 32px; width: 90%; max-width: 360px; padding: 24px; text-align: center; }
         @media (max-width: 640px) {
-            #sidebar { left: 12px; right: 12px; width: auto; top: auto; bottom: 12px; transform: translateY(0); max-height: 55vh; border-radius: 24px; }
+            #sidebar { left: 12px; right: 12px; width: auto; top: auto; bottom: 12px; transform: translateY(0); max-height: 52vh; }
             #sidebar.collapsed { transform: translateY(110%); }
-            .fab { width: 42px; height: 42px; font-size: 1.1rem; }
-            #fab-locate { bottom: 70px; }
-            #fab-toggle-sidebar { bottom: 122px; }
+            .action-row { gap: 8px; }
+            .btn-fly, .btn-route { padding: 6px 12px; font-size: 0.7rem; }
         }
     </style>
 </head>
 <body>
-
 <div id="map"></div>
 <div class="location-status" id="locationStatus"><span class="dot" id="statusDot"></span><span id="statusText">Location off</span></div>
-
 <aside id="sidebar">
     <div class="sidebar-header">
         <div class="brand"><span>🦖</span> Wanna grab monster?</div>
-        <div class="tagline">⚡ Two Monster spots in DHULE • Maharashtra</div>
-        <div class="city-badge">📍 <strong>Dhule City</strong> | 2 locations</div>
+        <div class="tagline">⚡ Twin spots • DHULE, Maharashtra</div>
+        <div class="city-badge">📍 <strong>Dhule District</strong> | Energy hub</div>
     </div>
-    <div class="spot-container" id="spotList"></div>
+    <div class="spot-container">
+        <!-- SPOT 1 (original) -->
+        <div class="monster-card">
+            <div class="spot-name">🛒 Monster Energy Hub <span>Main Spot</span></div>
+            <div class="address-detail">📍 Near Dhule City Center, Maharashtra</div>
+            <div class="coords-text">🧭 20.892272°N , 74.773925°E</div>
+            <div class="action-row">
+                <button class="btn-fly" id="flyToSpotBtn">✈️ Fly to Spot</button>
+                <div class="distance-info" id="distance-original">📍 distance: —</div>
+            </div>
+        </div>
+        <!-- SPOT 2 (NEW) with Route button -->
+        <div class="monster-card">
+            <div class="spot-name">🔥 Monster Energy • City Point <span>New Spot</span></div>
+            <div class="address-detail">📍 Sakri Road / Power House Area, Dhule</div>
+            <div class="coords-text">🧭 20.911281°N , 74.756950°E<br/>(20°54'40.61"N 74°45'25.02"E)</div>
+            <div class="action-row">
+                <button class="btn-fly" id="flyToNewSpotBtn">📍 Take me to Location</button>
+                <button class="btn-route" id="routeToNewSpotBtn">🚗 Route</button>
+                <div class="distance-info" id="distance-new">📍 distance: —</div>
+            </div>
+        </div>
+    </div>
     <div class="sidebar-footer">
         <button class="side-btn" id="refreshBtn">🔄 Refresh</button>
         <button class="side-btn primary" id="locateMeBtn">📍 Get My Location</button>
     </div>
 </aside>
-
 <div id="globalToast" class="toast-notify"><span>🦖</span><span id="toastMsg"></span><span class="toast-close" id="closeToastBtn">✕</span></div>
-<div id="addModal" class="modal-overlay"><div class="modal-card"><h3>📍 Dhule Exclusive Locations</h3><p>Two Monster Energy spots in Dhule. Click "Get My Location" to see distances.</p><button id="modalCloseBtn" style="margin-top:15px;padding:8px 20px;">Got it</button></div></div>
-
-<button id="fab-toggle-sidebar" class="fab">🗂️</button>
-<button id="fab-locate" class="fab">📍</button>
+<div id="addModal" class="modal-overlay"><div class="modal-card"><h3>📍 Dhule • Monster Territory</h3><p style="margin:10px 0;">Two Monster Energy spots. Click <strong>"Route"</strong> to get shortest path!</p><button id="modalCloseBtn" style="background:#2c2c2c; color:white; padding:10px 20px; border-radius:40px;">Got it</button></div></div>
+<button id="fab-toggle-sidebar" class="fab" title="Toggle Sidebar">🗂️</button>
+<button id="fab-locate" class="fab" title="Get my location">📍</button>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
     (function() {
-        // ---------- TWO EXACT LOCATIONS IN DHULE ----------
-        const LOCATIONS = [
-            {
-                id: "spot_main",
-                name: "Monster Energy Hub",
-                lat: 20.892272,       // 20°53'32.18"N
-                lng: 74.773925,       // 74°46'26.13"E
-                address: "Near Dhule City Center",
-                coordsDMS: "20°53'32.18\"N 74°46'26.13\"E",
-                tag: "ORIGINAL"
-            },
-            {
-                id: "spot_square",
-                name: "Monster Energy Square",
-                lat: 20.911280555555555,  // 20°54'40.61"N
-                lng: 74.75695,            // 74°45'25.02"E
-                address: "Tower Chowk area, Dhule",
-                coordsDMS: "20°54'40.61\"N 74°45'25.02\"E",
-                tag: "NEW SPOT"
-            }
-        ];
-
-        let map;
-        let markers = [];       // { marker, id }
-        let userMarker = null;
-        let userLocation = null;
-        let watchId = null;
+        // SPOTS
+        const SPOT1_LAT = 20.892272, SPOT1_LNG = 74.773925;
+        const SPOT2_LAT = 20.9112806, SPOT2_LNG = 74.75695;
+        let map, userLocation = null, watchId = null;
+        let markers = { spot1: null, spot2: null }, userMarker = null;
+        let routeControl = null;   // routing machine instance
 
         // DOM elements
-        const spotContainer = document.getElementById('spotList');
-        const locateBtn = document.getElementById('locateMeBtn');
+        const distanceSpot1El = document.getElementById('distance-original');
+        const distanceSpot2El = document.getElementById('distance-new');
+        const flySpot1Btn = document.getElementById('flyToSpotBtn');
+        const flySpot2Btn = document.getElementById('flyToNewSpotBtn');
+        const routeSpot2Btn = document.getElementById('routeToNewSpotBtn');
+        const locateMeBtn = document.getElementById('locateMeBtn');
         const refreshBtn = document.getElementById('refreshBtn');
-        const fabLocate = document.getElementById('fab-locate');
         const fabToggle = document.getElementById('fab-toggle-sidebar');
-        const sidebar = document.getElementById('sidebar');
+        const fabLocate = document.getElementById('fab-locate');
         const toastDiv = document.getElementById('globalToast');
-        const toastMsg = document.getElementById('toastMsg');
+        const toastMsgSpan = document.getElementById('toastMsg');
         const closeToast = document.getElementById('closeToastBtn');
-        const modal = document.getElementById('addModal');
+        const modalOverlay = document.getElementById('addModal');
         const modalClose = document.getElementById('modalCloseBtn');
         const statusDot = document.getElementById('statusDot');
         const statusText = document.getElementById('statusText');
 
-        let toastTimer = null;
-        function showToast(msg, duration = 3500) {
-            toastMsg.innerText = msg;
-            toastDiv.classList.add('show');
-            if (toastTimer) clearTimeout(toastTimer);
-            toastTimer = setTimeout(() => toastDiv.classList.remove('show'), duration);
+        let toastTimeout = null;
+        function showToast(msg, dur=3500) { toastMsgSpan.innerText = msg; toastDiv.classList.add('show'); if(toastTimeout) clearTimeout(toastTimeout); toastTimeout = setTimeout(()=>toastDiv.classList.remove('show'), dur); }
+        function updateStatusUI(hasLocation) { if(hasLocation && userLocation) { statusDot.classList.add('active'); statusText.textContent = '📍 Live location'; statusDot.style.background='#4caf50'; } else { statusDot.classList.remove('active'); statusText.textContent = '📍 Location off'; statusDot.style.background='#ff4444'; } }
+        function formatDistance(m) { if(!m) return '—'; return m<1000 ? Math.round(m)+' m' : (m/1000).toFixed(1)+' km'; }
+        function calcDistance(lat1,lng1,lat2,lng2) { const R=6371000; const dLat=(lat2-lat1)*Math.PI/180, dLng=(lng2-lng1)*Math.PI/180; const a=Math.sin(dLat/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2; return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a)); }
+        function updateBothDistances() { if(!userLocation) { distanceSpot1El.innerHTML='📍 distance: —'; distanceSpot2El.innerHTML='📍 distance: —'; return; } const d1=calcDistance(userLocation.lat,userLocation.lng,SPOT1_LAT,SPOT1_LNG); const d2=calcDistance(userLocation.lat,userLocation.lng,SPOT2_LAT,SPOT2_LNG); distanceSpot1El.innerHTML=`📍 ${formatDistance(d1)} away`; distanceSpot2El.innerHTML=`📍 ${formatDistance(d2)} away`; }
+        
+        // Clear previous route
+        function clearRoute() { if(routeControl) { map.removeControl(routeControl); routeControl = null; } }
+        
+        // Show route from userLocation to destination (lat,lng)
+        function showRouteTo(destLat, destLng, spotName) {
+            clearRoute();
+            if(!userLocation) { showToast("📍 Please enable location first (click 'Get My Location')", 3000); return false; }
+            // Create routing control with OSRM (free, accurate)
+            routeControl = L.Routing.control({
+                waypoints: [
+                    L.latLng(userLocation.lat, userLocation.lng),
+                    L.latLng(destLat, destLng)
+                ],
+                routeWhileDragging: false,
+                showAlternatives: false,
+                fitSelectedRoutes: true,
+                lineOptions: { styles: [{ color: '#3b82f6', weight: 5, opacity: 0.8 }] },
+                router: L.Routing.osrmv1({ serviceUrl: 'https://router.project-osrm.org/route/v1' }),
+                addWaypoints: false,
+                draggableWaypoints: false,
+                show: true,
+                collapsible: true,
+                position: 'topright'
+            }).addTo(map);
+            routeControl.on('routesfound', function(e) { let route = e.routes[0]; let distKm = (route.summary.totalDistance/1000).toFixed(1); showToast(`🚗 Shortest route to ${spotName}: ${distKm} km`, 4000); });
+            routeControl.on('routingerror', function() { showToast("⚠️ Could not calculate route. Check network.", 3000); });
+            return true;
         }
-
-        function updateStatusUI(active) {
-            if (active && userLocation) {
-                statusDot.classList.add('active');
-                statusText.innerText = '📍 Location active';
-            } else {
-                statusDot.classList.remove('active');
-                statusText.innerText = '📍 Location off';
-            }
+        
+        // Icons
+        function createMonsterIcon() { return L.divIcon({ html:`<div style="width:34px;height:34px;background:#101010;border-radius:50%;border:2.5px solid #ffdd77;display:flex;align-items:center;justify-content:center;font-size:1.2rem;box-shadow:0 0 0 4px rgba(0,0,0,0.4);">🦖</div>`, iconSize:[34,34], iconAnchor:[17,17], popupAnchor:[0,-18] }); }
+        function createUserIcon() { return L.divIcon({ html:`<div style="width:20px;height:20px;background:#4285f4;border-radius:50%;border:3px solid white;box-shadow:0 0 0 4px rgba(66,133,244,0.3);"></div>`, iconSize:[20,20], iconAnchor:[10,10] }); }
+        
+        function renderMonsterMarkers() {
+            if(markers.spot1) map.removeLayer(markers.spot1);
+            if(markers.spot2) map.removeLayer(markers.spot2);
+            const icon = createMonsterIcon();
+            markers.spot1 = L.marker([SPOT1_LAT, SPOT1_LNG], {icon}).addTo(map).bindPopup(`<div style="text-align:center;"><strong>🦖 ${SPOT1_NAME}</strong><br/>Dhule Main Hub<br/>20°53'32.18"N 74°46'26.13"E</div>`);
+            markers.spot2 = L.marker([SPOT2_LAT, SPOT2_LNG], {icon}).addTo(map).bindPopup(`<div style="text-align:center;"><strong>🔥 Monster City Point</strong><br/>Sakri Road, Dhule<br/>20°54'40.61"N 74°45'25.02"E</div>`);
         }
-
-        // Distance calculation (meters)
-        function distanceMeters(lat1, lng1, lat2, lng2) {
-            const R = 6371000;
-            const dLat = (lat2 - lat1) * Math.PI / 180;
-            const dLng = (lng2 - lng1) * Math.PI / 180;
-            const a = Math.sin(dLat/2)**2 + Math.cos(lat1 * Math.PI/180) * Math.cos(lat2 * Math.PI/180) * Math.sin(dLng/2)**2;
-            return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        function renderUserMarker() { if(userMarker) map.removeLayer(userMarker); if(userLocation) { userMarker = L.marker([userLocation.lat, userLocation.lng], {icon:createUserIcon(), zIndexOffset:1000}).addTo(map).bindPopup('<b>📍 You are here</b><br/>⚡ Route to spot? Click "Route"'); } }
+        
+        function flyTo(lat,lng,zoom,marker,msg) { map.flyTo([lat,lng],zoom,{duration:1.2}); setTimeout(()=>{ if(marker&&marker.openPopup) marker.openPopup(); },300); showToast(msg,2000); }
+        function flyToOriginal() { flyTo(SPOT1_LAT, SPOT1_LNG, 16, markers.spot1, "✈️ Flying to Main Monster Hub, Dhule!"); }
+        function flyToNewSpot() { flyTo(SPOT2_LAT, SPOT2_LNG, 16, markers.spot2, "📍 Taking you to Monster City Point!"); }
+        
+        // Route button action
+        function routeToNewSpot() {
+            if(userLocation) { showRouteTo(SPOT2_LAT, SPOT2_LNG, "Monster City Point"); }
+            else { showToast("📍 No location detected. Please click 'Get My Location' first.", 3000); }
         }
-
-        function formatDist(m) {
-            if (m === null) return '—';
-            return m < 1000 ? Math.round(m) + ' m' : (m/1000).toFixed(1) + ' km';
-        }
-
-        // Update distances on all cards (after location known)
-        function updateAllDistanceLabels() {
-            if (!userLocation) {
-                document.querySelectorAll('.distance-info').forEach(el => el.innerHTML = '📍 click "Get My Location"');
-                return;
-            }
-            LOCATIONS.forEach(loc => {
-                const dist = distanceMeters(userLocation.lat, userLocation.lng, loc.lat, loc.lng);
-                const span = document.getElementById(`dist-${loc.id}`);
-                if (span) span.innerHTML = `📍 ${formatDist(dist)} away`;
-            });
-        }
-
-        // Build sidebar cards dynamically (ensures both spots appear)
-        function buildSidebar() {
-            spotContainer.innerHTML = '';
-            for (let loc of LOCATIONS) {
-                const card = document.createElement('div');
-                card.className = 'monster-card';
-                card.innerHTML = `
-                    <div class="spot-name">
-                        🛒 ${escapeHtml(loc.name)} <span>${escapeHtml(loc.tag)}</span>
-                    </div>
-                    <div class="address-detail">📍 ${escapeHtml(loc.address)}</div>
-                    <div class="coords-text">🧭 ${loc.coordsDMS}</div>
-                    <div class="action-row">
-                        <button class="btn-take-me" data-id="${loc.id}">📍 Take me to Location</button>
-                        <div class="distance-info" id="dist-${loc.id}">📍 distance: —</div>
-                    </div>
-                `;
-                spotContainer.appendChild(card);
-            }
-            // Attach event listeners to all "Take me to Location" buttons
-            document.querySelectorAll('.btn-take-me').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    const id = btn.getAttribute('data-id');
-                    const loc = LOCATIONS.find(l => l.id === id);
-                    if (loc) flyToLocation(loc);
-                });
-            });
-        }
-
-        function escapeHtml(str) {
-            const div = document.createElement('div');
-            div.textContent = str;
-            return div.innerHTML;
-        }
-
-        // Marker icons
-        function createMonsterIcon(isSecond = false) {
-            const border = isSecond ? '#ffaa66' : '#ffdd77';
-            const html = `<div style="width:34px;height:34px;background:#101010;border-radius:50%;border:2.5px solid ${border};display:flex;align-items:center;justify-content:center;font-size:1.2rem;box-shadow:0 0 0 4px rgba(0,0,0,0.4);">🦖</div>`;
-            return L.divIcon({ html, iconSize: [34,34], iconAnchor: [17,17], popupAnchor: [0, -18] });
-        }
-
-        function createUserIcon() {
-            const html = `<div style="width:20px;height:20px;background:#4285f4;border-radius:50%;border:3px solid white;box-shadow:0 0 0 4px rgba(66,133,244,0.3);"></div>`;
-            return L.divIcon({ html, iconSize: [20,20], iconAnchor: [10,10] });
-        }
-
-        // Render both markers
-        function renderMarkers() {
-            markers.forEach(m => map.removeLayer(m.marker));
-            markers = [];
-            LOCATIONS.forEach((loc, idx) => {
-                const icon = createMonsterIcon(idx === 1);
-                const marker = L.marker([loc.lat, loc.lng], { icon })
-                    .addTo(map)
-                    .bindPopup(`
-                        <div style="text-align:center;">
-                            <strong>🦖 ${escapeHtml(loc.name)}</strong><br/>
-                            <span style="font-size:0.7rem;">${escapeHtml(loc.address)}</span><br/>
-                            <span style="font-size:0.65rem;">${loc.coordsDMS}</span>
-                        </div>
-                    `);
-                markers.push({ marker, id: loc.id });
-            });
-        }
-
-        function renderUserMarker() {
-            if (userMarker) map.removeLayer(userMarker);
-            if (userLocation) {
-                const icon = createUserIcon();
-                userMarker = L.marker([userLocation.lat, userLocation.lng], { icon, zIndexOffset: 1000 })
-                    .addTo(map)
-                    .bindPopup('<b>📍 You are here</b>');
-            }
-        }
-
-        function flyToLocation(loc) {
-            if (!map) return;
-            map.flyTo([loc.lat, loc.lng], 16, { duration: 1.2 });
-            setTimeout(() => {
-                const markerObj = markers.find(m => m.id === loc.id);
-                if (markerObj) {
-                    markerObj.marker.openPopup();
-                    const el = markerObj.marker.getElement();
-                    if (el) {
-                        el.style.transform = 'scale(1.3)';
-                        setTimeout(() => { if (el) el.style.transform = ''; }, 400);
-                    }
-                }
-            }, 300);
-            showToast(`✈️ Taking you to ${loc.name} in Dhule!`, 2000);
-        }
-
-        // Geolocation with browser prompt
-        function getLocation() {
-            if (!navigator.geolocation) {
-                showToast("⚠️ Browser does not support geolocation", 3000);
-                return;
-            }
-            showToast("📍 Requesting location permission...", 2000);
-            statusText.innerText = '📍 Requesting...';
+        
+        function refreshUI() { renderMonsterMarkers(); if(userLocation) { renderUserMarker(); updateBothDistances(); updateStatusUI(true); } else { distanceSpot1El.innerHTML='📍 distance: —'; distanceSpot2El.innerHTML='📍 distance: —'; updateStatusUI(false); } clearRoute(); showToast("🔄 Map refreshed",1500); }
+        
+        function fitMapToSpotsAndUser() { let bounds = L.latLngBounds([SPOT1_LAT,SPOT1_LNG], [SPOT2_LAT,SPOT2_LNG]); if(userLocation) bounds.extend([userLocation.lat,userLocation.lng]); map.fitBounds(bounds, {padding:[50,50]}); }
+        
+        function getLocationWithPrompt(showSuccess=true) {
+            if(!navigator.geolocation) { showToast("⚠️ Browser doesn't support geolocation",3000); return; }
+            showToast("📍 Requesting location...",2000); statusText.textContent='📍 Requesting...';
             navigator.geolocation.getCurrentPosition(
                 (pos) => {
                     userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-                    renderUserMarker();
-                    updateAllDistanceLabels();
-                    updateStatusUI(true);
-                    // Fit map to show both spots + user
-                    const allPoints = LOCATIONS.map(l => [l.lat, l.lng]);
-                    allPoints.push([userLocation.lat, userLocation.lng]);
-                    map.fitBounds(L.latLngBounds(allPoints), { padding: [60, 60] });
-                    // Find nearest spot
-                    let nearestDist = Infinity;
-                    LOCATIONS.forEach(loc => {
-                        const d = distanceMeters(userLocation.lat, userLocation.lng, loc.lat, loc.lng);
-                        if (d < nearestDist) nearestDist = d;
-                    });
-                    showToast(`✅ Location found! Nearest spot is ${formatDist(nearestDist)} away.`, 4500);
-                    // Watch position updates
-                    if (watchId) navigator.geolocation.clearWatch(watchId);
-                    watchId = navigator.geolocation.watchPosition(
-                        (newPos) => {
-                            userLocation = { lat: newPos.coords.latitude, lng: newPos.coords.longitude };
-                            renderUserMarker();
-                            updateAllDistanceLabels();
-                        },
-                        err => console.warn("Watch error", err),
-                        { enableHighAccuracy: true, maximumAge: 10000 }
-                    );
+                    renderUserMarker(); updateBothDistances(); updateStatusUI(true); fitMapToSpotsAndUser();
+                    if(showSuccess) { let d2=calcDistance(userLocation.lat,userLocation.lng,SPOT2_LAT,SPOT2_LNG); showToast(`✅ Location active! New spot: ${formatDistance(d2)} away`,4000); }
+                    if(watchId) navigator.geolocation.clearWatch(watchId);
+                    watchId = navigator.geolocation.watchPosition((newPos)=>{ userLocation={lat:newPos.coords.latitude,lng:newPos.coords.longitude}; renderUserMarker(); updateBothDistances(); if(routeControl) { clearRoute(); } }, (err)=>{}, {enableHighAccuracy:true, maximumAge:10000});
                 },
                 (err) => {
-                    console.error("Geo error", err.code);
-                    let msg = "";
-                    if (err.code === 1) msg = "❌ Permission denied. Please allow location in browser settings.";
-                    else if (err.code === 2) msg = "📍 Location unavailable. Turn on GPS.";
-                    else if (err.code === 3) msg = "⏰ Timeout. Try again.";
-                    else msg = "⚠️ Could not get location.";
-                    showToast(msg, 5000);
-                    updateStatusUI(false);
-                    statusText.innerText = '📍 Location denied';
-                    // Still center map on both spots
-                    const bounds = L.latLngBounds(LOCATIONS.map(l => [l.lat, l.lng]));
-                    map.fitBounds(bounds, { padding: [40, 40] });
+                    let msg = err.code===1?"❌ Location permission denied.": err.code===2?"📍 Location unavailable.":"⏰ Timeout. Try again.";
+                    showToast(msg,5000); updateStatusUI(false); statusText.textContent='📍 Denied'; fitMapToSpotsAndUser();
                 },
-                { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+                { enableHighAccuracy:true, timeout:15000, maximumAge:0 }
             );
         }
-
-        function refreshMap() {
-            renderMarkers();
-            if (userLocation) {
-                renderUserMarker();
-                updateAllDistanceLabels();
-                updateStatusUI(true);
-            } else {
-                updateAllDistanceLabels();
-                updateStatusUI(false);
-            }
-            showToast("🔄 Map refreshed • Both Dhule spots visible", 1800);
-        }
-
-        // Initialize map centered on both spots
+        
         function initMap() {
-            const bounds = L.latLngBounds(LOCATIONS.map(l => [l.lat, l.lng]));
-            map = L.map('map').fitBounds(bounds, { padding: [40, 40] });
-            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-                attribution: '&copy; OSM & CartoDB',
-                subdomains: 'abcd',
-                maxZoom: 19,
-            }).addTo(map);
-            L.control.zoom({ position: 'bottomright' }).addTo(map);
-            renderMarkers();
-            buildSidebar();          // creates cards with buttons
-            updateAllDistanceLabels();
-            updateStatusUI(false);
-            // Disable double-click add spot
-            map.on('dblclick', () => {
-                modal.classList.add('active');
-                setTimeout(() => modal.classList.remove('active'), 3000);
-            });
+            map = L.map('map').setView([SPOT1_LAT, SPOT1_LNG], 13);
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { attribution: '&copy; OSM & CartoDB', subdomains:'abcd', maxZoom:19 }).addTo(map);
+            L.control.zoom({position:'bottomright'}).addTo(map);
+            renderMonsterMarkers(); updateBothDistances(); updateStatusUI(false);
+            setTimeout(()=>fitMapToSpotsAndUser(), 200);
+            map.on('dblclick', ()=>{ modalOverlay.classList.add('active'); setTimeout(()=>modalOverlay.classList.remove('active'),2500); });
         }
-
-        // Event binding
+        
         function bindEvents() {
-            locateBtn.addEventListener('click', getLocation);
-            refreshBtn.addEventListener('click', refreshMap);
-            fabLocate.addEventListener('click', getLocation);
-            fabToggle.addEventListener('click', () => sidebar.classList.toggle('collapsed'));
-            closeToast.addEventListener('click', (e) => {
-                e.stopPropagation();
-                toastDiv.classList.remove('show');
-                if (toastTimer) clearTimeout(toastTimer);
-            });
-            toastDiv.addEventListener('click', (e) => {
-                if (e.target === closeToast) return;
-                if (userLocation) {
-                    let nearest = LOCATIONS[0];
-                    let minDist = Infinity;
-                    LOCATIONS.forEach(loc => {
-                        const d = distanceMeters(userLocation.lat, userLocation.lng, loc.lat, loc.lng);
-                        if (d < minDist) { minDist = d; nearest = loc; }
-                    });
-                    flyToLocation(nearest);
-                } else {
-                    flyToLocation(LOCATIONS[0]);
-                }
-                toastDiv.classList.remove('show');
-            });
-            modalClose.addEventListener('click', () => modal.classList.remove('active'));
-            modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.remove('active'); });
-            // Keyboard shortcuts
-            document.addEventListener('keydown', (e) => {
-                if (e.key === 'Escape' && modal.classList.contains('active')) modal.classList.remove('active');
-                if (e.ctrlKey && e.shiftKey && e.key === 'L') { e.preventDefault(); getLocation(); }
-                if (e.ctrlKey && e.shiftKey && e.key === 'B') { e.preventDefault(); sidebar.classList.toggle('collapsed'); }
-                if (e.ctrlKey && e.shiftKey && e.key === '1') { e.preventDefault(); flyToLocation(LOCATIONS[0]); }
-                if (e.ctrlKey && e.shiftKey && e.key === '2') { e.preventDefault(); flyToLocation(LOCATIONS[1]); }
-            });
+            flySpot1Btn.addEventListener('click', flyToOriginal);
+            flySpot2Btn.addEventListener('click', flyToNewSpot);
+            routeSpot2Btn.addEventListener('click', routeToNewSpot);
+            locateMeBtn.addEventListener('click', ()=>getLocationWithPrompt(true));
+            refreshBtn.addEventListener('click', refreshUI);
+            fabLocate.addEventListener('click', ()=>getLocationWithPrompt(true));
+            fabToggle.addEventListener('click', ()=>sidebar.classList.toggle('collapsed'));
+            closeToast.addEventListener('click', (e)=>{ e.stopPropagation(); toastDiv.classList.remove('show'); if(toastTimeout) clearTimeout(toastTimeout); });
+            toastDiv.addEventListener('click', (e)=>{ if(e.target===closeToast) return; flyToOriginal(); toastDiv.classList.remove('show'); });
+            modalClose.addEventListener('click', ()=>modalOverlay.classList.remove('active'));
+            modalOverlay.addEventListener('click', (e)=>{ if(e.target===modalOverlay) modalOverlay.classList.remove('active'); });
+            document.addEventListener('keydown', (e)=>{ if(e.key==='Escape' && modalOverlay.classList.contains('active')) modalOverlay.classList.remove('active'); if(e.ctrlKey && e.shiftKey && e.key==='L'){ e.preventDefault(); getLocationWithPrompt(true); } if(e.ctrlKey && e.shiftKey && e.key==='R'){ e.preventDefault(); routeToNewSpot(); } });
         }
-
-        // Start
+        
         initMap();
         bindEvents();
-        setTimeout(() => showToast("🦖 Two Monster spots in Dhule! Click 'Get My Location' to see distances.", 5000), 1000);
-        console.log("✅ Dhule map with 2 locations and 'Take me to Location' buttons loaded.");
+        setTimeout(()=>showToast(`🦖 Monster Energy Dhule — New "Route" button shows shortest path from your location to the new spot!`, 5500), 1000);
     })();
 </script>
 </body>
