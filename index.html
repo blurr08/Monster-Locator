@@ -22,39 +22,27 @@
             position: fixed;
             inset: 0;
             z-index: 1;
-            filter: grayscale(20%) contrast(1.08);
         }
         .leaflet-tile {
             filter: grayscale(100%) !important;
             opacity: 0.95;
         }
-        .leaflet-popup-content-wrapper {
-            background: #141414 !important;
-            color: #f0f0f0 !important;
-            border-radius: 20px !important;
-            border: 1px solid #2c2c2c !important;
-        }
-        .leaflet-popup-tip {
-            background: #141414 !important;
-        }
-        /* Monster Logo Style */
+        /* Monster Logo */
         .monster-logo {
-            width: 36px;
-            height: 36px;
-            background: linear-gradient(135deg, #00cc00, #008800);
+            width: 38px;
+            height: 38px;
+            background: radial-gradient(circle at 30% 35%, #1ecc00, #006600);
             border-radius: 50%;
-            display: inline-flex;
+            display: flex;
             align-items: center;
             justify-content: center;
             font-weight: 900;
             font-size: 1.5rem;
             color: white;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
-            box-shadow: 0 0 0 2px #000, 0 0 0 4px #00aa00;
             font-family: 'Impact', 'Arial Black', sans-serif;
-        }
-        .monster-logo span {
-            transform: rotate(-5deg);
+            border: 2px solid #ffcc00;
+            box-shadow: 0 0 0 2px black;
+            text-shadow: 1px 1px 0 #000;
         }
         /* Sidebar */
         #sidebar {
@@ -84,29 +72,25 @@
             border-bottom: 1px solid #242424;
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 14px;
         }
         .brand-text {
-            font-size: 1.4rem;
+            font-size: 1.3rem;
             font-weight: 800;
             letter-spacing: -0.5px;
         }
         .tagline {
-            font-size: 0.72rem;
+            font-size: 0.7rem;
             color: #aaa;
-            margin-top: 4px;
         }
         .city-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
+            display: inline-block;
             background: #1e1e1e;
-            margin-top: 8px;
+            margin: 8px 0 0 22px;
             padding: 5px 14px;
             border-radius: 40px;
             font-size: 0.7rem;
         }
-        .city-badge strong { color: #ffd966; }
         .spot-container {
             flex: 1;
             overflow-y: auto;
@@ -119,12 +103,8 @@
             background: #181818;
             border: 1px solid #2c2c2c;
             border-radius: 24px;
-            padding: 16px 18px;
+            padding: 16px;
             transition: 0.2s;
-        }
-        .monster-card:hover {
-            background: #202020;
-            transform: translateY(-2px);
         }
         .spot-name {
             font-size: 1rem;
@@ -132,7 +112,6 @@
             display: flex;
             align-items: center;
             gap: 8px;
-            flex-wrap: wrap;
         }
         .spot-name span {
             background: #2c2c2c;
@@ -154,7 +133,6 @@
             border-radius: 12px;
             display: inline-block;
             margin-top: 6px;
-            color: #bbb;
         }
         .action-row {
             display: flex;
@@ -168,8 +146,8 @@
             background: #0066cc;
             border: none;
             color: white;
-            font-weight: 600;
-            padding: 8px 18px;
+            font-weight: bold;
+            padding: 8px 16px;
             border-radius: 40px;
             font-size: 0.75rem;
             cursor: pointer;
@@ -177,16 +155,15 @@
             display: inline-flex;
             align-items: center;
             gap: 6px;
-            font-family: inherit;
         }
         .btn-take-me:hover {
             background: #0088ff;
-            transform: scale(0.98);
+            transform: scale(0.97);
         }
         .distance-info {
             font-size: 0.7rem;
-            background: #00000040;
-            padding: 4px 12px;
+            background: #00000060;
+            padding: 4px 10px;
             border-radius: 50px;
         }
         .sidebar-footer {
@@ -200,7 +177,7 @@
             background: #1c1c1c;
             border: 1px solid #303030;
             border-radius: 40px;
-            padding: 11px 0;
+            padding: 10px 0;
             font-weight: 600;
             font-size: 0.75rem;
             color: #ddd;
@@ -210,7 +187,6 @@
         .side-btn.primary {
             background: #ffffff;
             color: #000;
-            font-weight: 700;
         }
         .fab {
             position: fixed;
@@ -261,13 +237,12 @@
             background: #1a1a1a;
             border: 1px solid #ffd966;
             border-radius: 40px;
-            padding: 8px 16px;
+            padding: 6px 14px;
             font-size: 0.7rem;
             display: flex;
             align-items: center;
             gap: 8px;
             backdrop-filter: blur(10px);
-            pointer-events: none;
         }
         .dot {
             width: 8px;
@@ -296,13 +271,13 @@
             border-radius: 32px;
             width: 90%;
             max-width: 360px;
-            padding: 24px 22px;
+            padding: 24px;
             text-align: center;
         }
         @media (max-width: 640px) {
-            #sidebar { left: 12px; right: 12px; width: auto; top: auto; bottom: 12px; transform: translateY(0); max-height: 55vh; border-radius: 24px; }
+            #sidebar { left: 12px; right: 12px; width: auto; top: auto; bottom: 12px; transform: translateY(0); max-height: 55vh; }
             #sidebar.collapsed { transform: translateY(110%); }
-            .fab { width: 42px; height: 42px; font-size: 1.1rem; }
+            .fab { width: 42px; height: 42px; }
             #fab-locate { bottom: 70px; }
             #fab-toggle-sidebar { bottom: 122px; }
         }
@@ -315,13 +290,13 @@
 
 <aside id="sidebar">
     <div class="sidebar-header">
-        <div class="monster-logo"><span>M</span></div>
+        <div class="monster-logo">M</div>
         <div>
             <div class="brand-text">MONSTER ENERGY</div>
             <div class="tagline">⚡ Dhule • Maharashtra</div>
         </div>
     </div>
-    <div class="city-badge" style="margin-left: 22px; margin-bottom: 8px;">📍 <strong>2 locations</strong> in Dhule city</div>
+    <div class="city-badge">📍 2 locations in Dhule city</div>
     <div class="spot-container" id="spotList"></div>
     <div class="sidebar-footer">
         <button class="side-btn" id="refreshBtn">🔄 Refresh</button>
@@ -330,7 +305,7 @@
 </aside>
 
 <div id="globalToast" class="toast-notify"><span>🧃</span><span id="toastMsg"></span><span class="toast-close" id="closeToastBtn">✕</span></div>
-<div id="addModal" class="modal-overlay"><div class="modal-card"><h3>📍 Dhule Exclusive Locations</h3><p>Two Monster Energy spots in Dhule. Click "Get My Location" to see distances.</p><button id="modalCloseBtn" style="margin-top:15px;padding:8px 20px;">Got it</button></div></div>
+<div id="addModal" class="modal-overlay"><div class="modal-card"><h3>🧃 Monster Energy Dhule</h3><p>Two official spots in Dhule. Click "Get My Location" to see distances.</p><button id="modalCloseBtn" style="margin-top:15px;padding:8px 20px;">OK</button></div></div>
 
 <button id="fab-toggle-sidebar" class="fab">🗂️</button>
 <button id="fab-locate" class="fab">📍</button>
@@ -338,7 +313,7 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
     (function() {
-        // ==================== TWO LOCATIONS IN DHULE ====================
+        // ----- TWO EXACT LOCATIONS IN DHULE -----
         const LOCATIONS = [
             {
                 id: "spot_main",
@@ -392,14 +367,13 @@
         function updateStatusUI(active) {
             if (active && userLocation) {
                 statusDot.classList.add('active');
-                statusText.innerText = '📍 Active';
+                statusText.innerText = 'Active';
             } else {
                 statusDot.classList.remove('active');
-                statusText.innerText = '📍 Off';
+                statusText.innerText = 'Off';
             }
         }
 
-        // Distance calculation (meters)
         function distanceMeters(lat1, lng1, lat2, lng2) {
             const R = 6371000;
             const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -413,7 +387,6 @@
             return m < 1000 ? Math.round(m) + ' m' : (m/1000).toFixed(1) + ' km';
         }
 
-        // Update all distance labels in cards
         function updateAllDistanceLabels() {
             if (!userLocation) {
                 document.querySelectorAll('.distance-info').forEach(el => el.innerHTML = '📍 enable location');
@@ -426,13 +399,12 @@
             });
         }
 
-        // Build sidebar with cards and attach event listeners (FIXED)
+        // Build sidebar cards and attach button listeners (SIMPLE & RELIABLE)
         function buildSidebar() {
             spotContainer.innerHTML = '';
-            for (let loc of LOCATIONS) {
+            LOCATIONS.forEach(loc => {
                 const card = document.createElement('div');
                 card.className = 'monster-card';
-                card.setAttribute('data-loc-id', loc.id);
                 card.innerHTML = `
                     <div class="spot-name">
                         🧃 ${escapeHtml(loc.name)} <span>${escapeHtml(loc.tag)}</span>
@@ -445,15 +417,19 @@
                     </div>
                 `;
                 spotContainer.appendChild(card);
-            }
-            // Attach click events to all "Take me to Location" buttons (direct binding)
+            });
+            // Attach event listeners AFTER cards are in DOM
             document.querySelectorAll('.btn-take-me').forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     e.stopPropagation();
                     const id = btn.getAttribute('data-id');
-                    const targetLoc = LOCATIONS.find(l => l.id === id);
-                    if (targetLoc) flyToLocation(targetLoc);
-                    else console.warn("Location not found for id:", id);
+                    const loc = LOCATIONS.find(l => l.id === id);
+                    if (loc) {
+                        flyToLocation(loc);
+                    } else {
+                        console.error('Location not found:', id);
+                        showToast('Error: location not found', 2000);
+                    }
                 });
             });
         }
@@ -464,25 +440,9 @@
             return div.innerHTML;
         }
 
-        // Custom Monster Energy marker icon (claw-like "M")
+        // Monster Energy map marker
         function createMonsterIcon() {
-            const html = `
-                <div style="
-                    width:36px; height:36px;
-                    background: radial-gradient(circle at 30% 30%, #00cc00, #006600);
-                    border-radius: 50%;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    font-weight: 900;
-                    font-size: 1.6rem;
-                    color: white;
-                    font-family: 'Impact', sans-serif;
-                    border: 2px solid #ffcc00;
-                    box-shadow: 0 0 0 3px black;
-                    text-shadow: 1px 1px 0 #000;
-                ">M</div>
-            `;
+            const html = `<div style="width:36px;height:36px;background:radial-gradient(circle at 30% 35%, #1ecc00, #006600);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:1.4rem;color:white;font-family:'Impact',sans-serif;border:2px solid #ffcc00;box-shadow:0 0 0 2px black;">M</div>`;
             return L.divIcon({ html, iconSize: [36,36], iconAnchor: [18,18], popupAnchor: [0, -20] });
         }
 
@@ -491,7 +451,6 @@
             return L.divIcon({ html, iconSize: [20,20], iconAnchor: [10,10] });
         }
 
-        // Render both location markers
         function renderMarkers() {
             markers.forEach(m => map.removeLayer(m.marker));
             markers = [];
@@ -502,8 +461,8 @@
                     .bindPopup(`
                         <div style="text-align:center;">
                             <strong>🧃 ${escapeHtml(loc.name)}</strong><br/>
-                            <span style="font-size:0.7rem;">${escapeHtml(loc.address)}</span><br/>
-                            <span style="font-size:0.65rem;">${loc.coordsDMS}</span>
+                            ${escapeHtml(loc.address)}<br/>
+                            <small>${loc.coordsDMS}</small>
                         </div>
                     `);
                 markers.push({ marker, id: loc.id });
@@ -520,7 +479,6 @@
             }
         }
 
-        // Fly to a specific location and open popup
         function flyToLocation(loc) {
             if (!map) return;
             map.flyTo([loc.lat, loc.lng], 16, { duration: 1.2 });
@@ -535,33 +493,31 @@
                     }
                 }
             }, 300);
-            showToast(`🧃 Taking you to ${loc.name} in Dhule!`, 2000);
+            showToast(`🧃 Taking you to ${loc.name}`, 2000);
         }
 
-        // Geolocation with browser permission prompt
         function getLocation() {
             if (!navigator.geolocation) {
-                showToast("⚠️ Browser does not support geolocation", 3000);
+                showToast("⚠️ Browser doesn't support geolocation", 3000);
                 return;
             }
-            showToast("📍 Requesting location permission...", 2000);
-            statusText.innerText = '📍 Requesting...';
+            showToast("📍 Requesting location...", 2000);
+            statusText.innerText = 'Requesting...';
             navigator.geolocation.getCurrentPosition(
                 (pos) => {
                     userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
                     renderUserMarker();
                     updateAllDistanceLabels();
                     updateStatusUI(true);
-                    // Fit map to show both spots + user
                     const allPoints = LOCATIONS.map(l => [l.lat, l.lng]);
                     allPoints.push([userLocation.lat, userLocation.lng]);
                     map.fitBounds(L.latLngBounds(allPoints), { padding: [60, 60] });
-                    let nearestDist = Infinity;
+                    let nearest = Infinity;
                     LOCATIONS.forEach(loc => {
                         const d = distanceMeters(userLocation.lat, userLocation.lng, loc.lat, loc.lng);
-                        if (d < nearestDist) nearestDist = d;
+                        if (d < nearest) nearest = d;
                     });
-                    showToast(`✅ Location set! Nearest spot is ${formatDist(nearestDist)} away.`, 4500);
+                    showToast(`✅ Location set! Nearest spot is ${formatDist(nearest)} away.`, 4500);
                     if (watchId) navigator.geolocation.clearWatch(watchId);
                     watchId = navigator.geolocation.watchPosition(
                         (newPos) => {
@@ -569,20 +525,19 @@
                             renderUserMarker();
                             updateAllDistanceLabels();
                         },
-                        err => console.warn("Watch error", err),
+                        err => console.warn(err),
                         { enableHighAccuracy: true, maximumAge: 10000 }
                     );
                 },
                 (err) => {
-                    console.error("Geo error", err.code);
                     let msg = "";
-                    if (err.code === 1) msg = "❌ Permission denied. Please allow location access.";
-                    else if (err.code === 2) msg = "📍 Location unavailable. Turn on GPS.";
-                    else if (err.code === 3) msg = "⏰ Timeout. Try again.";
+                    if (err.code === 1) msg = "❌ Permission denied. Allow location access.";
+                    else if (err.code === 2) msg = "📍 Location unavailable.";
+                    else if (err.code === 3) msg = "⏰ Timeout.";
                     else msg = "⚠️ Could not get location.";
                     showToast(msg, 5000);
                     updateStatusUI(false);
-                    statusText.innerText = '📍 Denied';
+                    statusText.innerText = 'Denied';
                     const bounds = L.latLngBounds(LOCATIONS.map(l => [l.lat, l.lng]));
                     map.fitBounds(bounds, { padding: [40, 40] });
                 },
@@ -600,10 +555,9 @@
                 updateAllDistanceLabels();
                 updateStatusUI(false);
             }
-            showToast("🔄 Map refreshed • Both Dhule spots visible", 1800);
+            showToast("🔄 Map refreshed", 1500);
         }
 
-        // Initialize map with both spots in view
         function initMap() {
             const bounds = L.latLngBounds(LOCATIONS.map(l => [l.lat, l.lng]));
             map = L.map('map').fitBounds(bounds, { padding: [40, 40] });
@@ -614,7 +568,7 @@
             }).addTo(map);
             L.control.zoom({ position: 'bottomright' }).addTo(map);
             renderMarkers();
-            buildSidebar();     // creates cards and attaches button events
+            buildSidebar();   // creates cards & attaches button click handlers
             updateAllDistanceLabels();
             updateStatusUI(false);
             map.on('dblclick', () => {
@@ -623,7 +577,6 @@
             });
         }
 
-        // Event binding
         function bindEvents() {
             locateBtn.addEventListener('click', getLocation);
             refreshBtn.addEventListener('click', refreshMap);
@@ -638,10 +591,10 @@
                 if (e.target === closeToast) return;
                 if (userLocation) {
                     let nearest = LOCATIONS[0];
-                    let minDist = Infinity;
+                    let minD = Infinity;
                     LOCATIONS.forEach(loc => {
                         const d = distanceMeters(userLocation.lat, userLocation.lng, loc.lat, loc.lng);
-                        if (d < minDist) { minDist = d; nearest = loc; }
+                        if (d < minD) { minD = d; nearest = loc; }
                     });
                     flyToLocation(nearest);
                 } else {
@@ -653,7 +606,7 @@
             modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.remove('active'); });
             // Keyboard shortcuts
             document.addEventListener('keydown', (e) => {
-                if (e.key === 'Escape' && modal.classList.contains('active')) modal.classList.remove('active');
+                if (e.key === 'Escape') modal.classList.remove('active');
                 if (e.ctrlKey && e.shiftKey && e.key === 'L') { e.preventDefault(); getLocation(); }
                 if (e.ctrlKey && e.shiftKey && e.key === 'B') { e.preventDefault(); sidebar.classList.toggle('collapsed'); }
                 if (e.ctrlKey && e.shiftKey && e.key === '1') { e.preventDefault(); flyToLocation(LOCATIONS[0]); }
@@ -663,8 +616,8 @@
 
         initMap();
         bindEvents();
-        setTimeout(() => showToast("🧃 Two Monster spots in Dhule! Click 'Get My Location' to see distances.", 5000), 1000);
-        console.log("✅ Dhule map ready | Monster logo + fixed Take Me buttons");
+        setTimeout(() => showToast("🧃 Monster Energy Dhule • Two spots ready. Click 'Get My Location'", 5000), 1000);
+        console.log("✅ Map ready, buttons are bound and functional.");
     })();
 </script>
 </body>
