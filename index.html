@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Monster Energy • Dhule (2 Locations)</title>
+    <title>Monster Energy • Dhule (2 Locations with Routes)</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
     <style>
         * {
             margin: 0;
@@ -51,7 +52,7 @@
             left: 18px;
             top: 50%;
             transform: translateY(-50%);
-            width: 360px;
+            width: 380px;
             max-height: calc(100vh - 48px);
             background: rgba(17, 17, 17, 0.96);
             backdrop-filter: blur(2px);
@@ -142,22 +143,36 @@
             gap: 10px;
             flex-wrap: wrap;
         }
-        .btn-take-me {
-            background: #0066cc;
+        .btn-group {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .btn-take-me, .btn-route {
             border: none;
             color: white;
             font-weight: bold;
-            padding: 8px 16px;
+            padding: 8px 14px;
             border-radius: 40px;
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             cursor: pointer;
             transition: 0.2s;
             display: inline-flex;
             align-items: center;
-            gap: 6px;
+            gap: 5px;
+        }
+        .btn-take-me {
+            background: #0066cc;
         }
         .btn-take-me:hover {
             background: #0088ff;
+            transform: scale(0.97);
+        }
+        .btn-route {
+            background: #28a745;
+        }
+        .btn-route:hover {
+            background: #34ce57;
             transform: scale(0.97);
         }
         .distance-info {
@@ -274,12 +289,23 @@
             padding: 24px;
             text-align: center;
         }
+        /* Routing control custom style */
+        .leaflet-routing-container {
+            background-color: #1e1e1e;
+            border-color: #444;
+            color: #fff;
+        }
+        .leaflet-routing-container h2 {
+            color: #ffd966;
+        }
         @media (max-width: 640px) {
             #sidebar { left: 12px; right: 12px; width: auto; top: auto; bottom: 12px; transform: translateY(0); max-height: 55vh; }
             #sidebar.collapsed { transform: translateY(110%); }
             .fab { width: 42px; height: 42px; }
             #fab-locate { bottom: 70px; }
             #fab-toggle-sidebar { bottom: 122px; }
+            .btn-group { flex-direction: column; width: 100%; }
+            .btn-take-me, .btn-route { justify-content: center; }
         }
     </style>
 </head>
@@ -305,12 +331,13 @@
 </aside>
 
 <div id="globalToast" class="toast-notify"><span>🧃</span><span id="toastMsg"></span><span class="toast-close" id="closeToastBtn">✕</span></div>
-<div id="addModal" class="modal-overlay"><div class="modal-card"><h3>🧃 Monster Energy Dhule</h3><p>Two official spots in Dhule. Click "Get My Location" to see distances.</p><button id="modalCloseBtn" style="margin-top:15px;padding:8px 20px;">OK</button></div></div>
+<div id="addModal" class="modal-overlay"><div class="modal-card"><h3>🧃 Monster Energy Dhule</h3><p>Two official spots. Click "Route" after enabling location to get directions.</p><button id="modalCloseBtn" style="margin-top:15px;padding:8px 20px;">OK</button></div></div>
 
 <button id="fab-toggle-sidebar" class="fab">🗂️</button>
 <button id="fab-locate" class="fab">📍</button>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
 <script>
     (function() {
         // ----- TWO EXACT LOCATIONS IN DHULE -----
@@ -340,6 +367,7 @@
         let userMarker = null;
         let userLocation = null;
         let watchId = null;
+        let currentRouteControl = null;  // to remove previous route
 
         // DOM elements
         const spotContainer = document.getElementById('spotList');
@@ -399,7 +427,45 @@
             });
         }
 
-        // Build sidebar cards and attach button listeners (SIMPLE & RELIABLE)
+        // Remove existing route from map
+        function clearRoute() {
+            if (currentRouteControl) {
+                map.removeControl(currentRouteControl);
+                currentRouteControl = null;
+            }
+        }
+
+        // Show route from userLocation to destination
+        function showRoute(destLat, destLng, destName) {
+            if (!userLocation) {
+                showToast("📍 Please enable location first (click 'Get My Location')", 4000);
+                return;
+            }
+            clearRoute();
+            // Create routing control
+            currentRouteControl = L.Routing.control({
+                waypoints: [
+                    L.latLng(userLocation.lat, userLocation.lng),
+                    L.latLng(destLat, destLng)
+                ],
+                routeWhileDragging: false,
+                showAlternatives: false,
+                fitSelectedRoutes: true,
+                lineOptions: {
+                    styles: [{ color: '#00ccff', weight: 6, opacity: 0.8 }]
+                },
+                router: L.Routing.osrmv1({
+                    serviceUrl: 'https://router.project-osrm.org/route/v1/'
+                }),
+                show: true,
+                addWaypoints: false,
+                draggableWaypoints: false
+            }).addTo(map);
+            
+            showToast(`🧭 Route to ${destName} loaded. Follow blue line.`, 4000);
+        }
+
+        // Build sidebar cards with two buttons
         function buildSidebar() {
             spotContainer.innerHTML = '';
             LOCATIONS.forEach(loc => {
@@ -412,23 +478,35 @@
                     <div class="address-detail">📍 ${escapeHtml(loc.address)}</div>
                     <div class="coords-text">🧭 ${loc.coordsDMS}</div>
                     <div class="action-row">
-                        <button class="btn-take-me" data-id="${loc.id}">📍 Take me to Location</button>
+                        <div class="btn-group">
+                            <button class="btn-take-me" data-id="${loc.id}">📍 Take me</button>
+                            <button class="btn-route" data-id="${loc.id}">🧭 Route</button>
+                        </div>
                         <div class="distance-info" id="dist-${loc.id}">📍 distance: —</div>
                     </div>
                 `;
                 spotContainer.appendChild(card);
             });
-            // Attach event listeners AFTER cards are in DOM
+            // Attach event listeners for both buttons
             document.querySelectorAll('.btn-take-me').forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     e.stopPropagation();
                     const id = btn.getAttribute('data-id');
                     const loc = LOCATIONS.find(l => l.id === id);
+                    if (loc) flyToLocation(loc);
+                });
+            });
+            document.querySelectorAll('.btn-route').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const id = btn.getAttribute('data-id');
+                    const loc = LOCATIONS.find(l => l.id === id);
                     if (loc) {
-                        flyToLocation(loc);
-                    } else {
-                        console.error('Location not found:', id);
-                        showToast('Error: location not found', 2000);
+                        if (!userLocation) {
+                            showToast("📍 Please get your location first (click 'Get My Location')", 4000);
+                            return;
+                        }
+                        showRoute(loc.lat, loc.lng, loc.name);
                     }
                 });
             });
@@ -493,7 +571,7 @@
                     }
                 }
             }, 300);
-            showToast(`🧃 Taking you to ${loc.name}`, 2000);
+            showToast(`🧃 Flying to ${loc.name}`, 2000);
         }
 
         function getLocation() {
@@ -509,6 +587,8 @@
                     renderUserMarker();
                     updateAllDistanceLabels();
                     updateStatusUI(true);
+                    // Clear any existing route when location changes
+                    clearRoute();
                     const allPoints = LOCATIONS.map(l => [l.lat, l.lng]);
                     allPoints.push([userLocation.lat, userLocation.lng]);
                     map.fitBounds(L.latLngBounds(allPoints), { padding: [60, 60] });
@@ -524,6 +604,8 @@
                             userLocation = { lat: newPos.coords.latitude, lng: newPos.coords.longitude };
                             renderUserMarker();
                             updateAllDistanceLabels();
+                            // Optionally clear route because origin changed (user moved)
+                            clearRoute();
                         },
                         err => console.warn(err),
                         { enableHighAccuracy: true, maximumAge: 10000 }
@@ -555,6 +637,7 @@
                 updateAllDistanceLabels();
                 updateStatusUI(false);
             }
+            clearRoute();  // remove old route on refresh
             showToast("🔄 Map refreshed", 1500);
         }
 
@@ -568,7 +651,7 @@
             }).addTo(map);
             L.control.zoom({ position: 'bottomright' }).addTo(map);
             renderMarkers();
-            buildSidebar();   // creates cards & attaches button click handlers
+            buildSidebar();
             updateAllDistanceLabels();
             updateStatusUI(false);
             map.on('dblclick', () => {
@@ -616,8 +699,8 @@
 
         initMap();
         bindEvents();
-        setTimeout(() => showToast("🧃 Monster Energy Dhule • Two spots ready. Click 'Get My Location'", 5000), 1000);
-        console.log("✅ Map ready, buttons are bound and functional.");
+        setTimeout(() => showToast("🧃 Monster Energy Dhule • Click 'Route' after enabling location for directions", 5000), 1000);
+        console.log("✅ Map ready with route buttons.");
     })();
 </script>
 </body>
