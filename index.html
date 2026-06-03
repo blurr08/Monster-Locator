@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Monster Energy • Dhule (Animated Routes)</title>
+    <title>Monster Energy • Dhule (Animated Routes - Persistent)</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         * {
@@ -290,13 +290,13 @@
             padding: 24px;
             text-align: center;
         }
-        /* animated polyline dashed effect */
+        /* Animated polyline - moving dashes */
         .animated-route {
-            stroke-dasharray: 10, 10;
-            animation: dash 1s linear infinite;
+            stroke-dasharray: 10, 12;
+            animation: dash 0.8s linear infinite;
         }
         @keyframes dash {
-            to { stroke-dashoffset: -20; }
+            to { stroke-dashoffset: -22; }
         }
         @media (max-width: 640px) {
             #sidebar { left: 12px; right: 12px; width: auto; top: auto; bottom: 12px; transform: translateY(0); max-height: 55vh; }
@@ -333,7 +333,7 @@
 </aside>
 
 <div id="globalToast" class="toast-notify"><span>🧃</span><span id="toastMsg"></span><span class="toast-close" id="closeToastBtn">✕</span></div>
-<div id="addModal" class="modal-overlay"><div class="modal-card"><h3>🧃 Monster Energy Dhule</h3><p>Two official spots. Click "Route" after enabling location to see animated blue line.</p><button id="modalCloseBtn" style="margin-top:15px;padding:8px 20px;">OK</button></div></div>
+<div id="addModal" class="modal-overlay"><div class="modal-card"><h3>🧃 Monster Energy Dhule</h3><p>Two official spots. Click "Route" to see animated blue line (stays until you choose another route).</p><button id="modalCloseBtn" style="margin-top:15px;padding:8px 20px;">OK</button></div></div>
 
 <button id="fab-toggle-sidebar" class="fab">🗂️</button>
 <button id="fab-locate" class="fab">📍</button>
@@ -430,7 +430,7 @@
             });
         }
 
-        // Clear previous route and animation
+        // Clear previous route and animation (only when new route or refresh)
         function clearRoute() {
             if (currentRouteLayer) {
                 map.removeLayer(currentRouteLayer);
@@ -446,9 +446,9 @@
             }
         }
 
-        // Fetch route from OSRM and draw animated blue line + moving car
+        // Fetch route from OSRM and draw persistent animated blue line + moving car
         async function fetchAndDrawRoute(startLat, startLng, endLat, endLng, destName) {
-            clearRoute();
+            clearRoute(); // remove old route before drawing new one
             showToast(`🧭 Fetching route to ${destName}...`, 2000);
 
             const url = `https://router.project-osrm.org/route/v1/driving/${startLng},${startLat};${endLng},${endLat}?overview=full&geometries=geojson`;
@@ -462,7 +462,7 @@
                 const route = data.routes[0];
                 const coords = route.geometry.coordinates.map(coord => [coord[1], coord[0]]); // [lng, lat] -> [lat, lng]
                 
-                // Draw animated polyline (blue with moving dashes)
+                // Draw persistent animated polyline (blue with moving dashes)
                 currentRouteLayer = L.polyline(coords, {
                     color: '#00ccff',
                     weight: 6,
@@ -470,7 +470,7 @@
                     className: 'animated-route'
                 }).addTo(map);
                 
-                // Add a moving car marker (optional but cool)
+                // Add a moving car marker
                 const carIcon = L.divIcon({
                     html: '🚗',
                     iconSize: [24, 24],
@@ -482,24 +482,24 @@
                 // Animate the car along the route
                 let step = 0;
                 const steps = coords.length;
+                if (animationInterval) clearInterval(animationInterval);
                 animationInterval = setInterval(() => {
                     if (step < steps) {
                         currentAnimatedMarker.setLatLng(coords[step]);
                         step++;
                     } else {
-                        // Reached destination, stop animation
+                        // Reached destination: stop car animation but keep line
                         clearInterval(animationInterval);
                         animationInterval = null;
-                        // Optional: remove car or keep at destination
-                        showToast(`✅ You've reached ${destName}!`, 3000);
+                        showToast(`✅ Route ready - you've reached ${destName} (marker stopped)`, 3000);
                     }
-                }, 50); // smooth movement
+                }, 50);
                 
                 // Fit map to route bounds
                 const bounds = L.latLngBounds(coords);
                 map.fitBounds(bounds, { padding: [50, 50] });
                 
-                // Show route info in toast
+                // Show route info
                 const distanceKm = (route.distance / 1000).toFixed(1);
                 const durationMin = Math.round(route.duration / 60);
                 showToast(`🧃 Route to ${destName}: ${distanceKm} km, ~${durationMin} min`, 5000);
@@ -507,7 +507,7 @@
             } catch (error) {
                 console.error('Routing error:', error);
                 showToast(`⚠️ Could not calculate route. Please try again.`, 4000);
-                // Fallback: draw straight line
+                // Fallback: draw straight dashed line
                 const straightLine = [[startLat, startLng], [endLat, endLng]];
                 currentRouteLayer = L.polyline(straightLine, { color: '#ff4444', weight: 3, dashArray: '5, 10' }).addTo(map);
                 map.fitBounds(L.latLngBounds(straightLine), { padding: [50, 50] });
@@ -636,7 +636,7 @@
                     renderUserMarker();
                     updateAllDistanceLabels();
                     updateStatusUI(true);
-                    clearRoute(); // clear any existing route when location changes
+                    // Do NOT clear route automatically – keep existing route if any
                     const allPoints = LOCATIONS.map(l => [l.lat, l.lng]);
                     allPoints.push([userLocation.lat, userLocation.lng]);
                     map.fitBounds(L.latLngBounds(allPoints), { padding: [60, 60] });
@@ -646,15 +646,19 @@
                         if (d < nearest) nearest = d;
                     });
                     showToast(`✅ Location set! Nearest spot is ${formatDist(nearest)} away.`, 4500);
+                    
+                    // Set up watch but DO NOT clear route on each update
                     if (watchId) navigator.geolocation.clearWatch(watchId);
                     watchId = navigator.geolocation.watchPosition(
                         (newPos) => {
                             userLocation = { lat: newPos.coords.latitude, lng: newPos.coords.longitude };
                             renderUserMarker();
                             updateAllDistanceLabels();
-                            clearRoute(); // clear route when user moves significantly
+                            // IMPORTANT: Do NOT clear route here – let the route persist
+                            // If you want to update the route dynamically, that would require re-fetching.
+                            // For simplicity, we keep the existing route line.
                         },
-                        err => console.warn(err),
+                        err => console.warn("Watch error:", err),
                         { enableHighAccuracy: true, maximumAge: 10000 }
                     );
                 },
@@ -684,7 +688,7 @@
                 updateAllDistanceLabels();
                 updateStatusUI(false);
             }
-            clearRoute();
+            clearRoute(); // explicitly clear route on refresh
             showToast("🔄 Map refreshed", 1500);
         }
 
@@ -746,8 +750,8 @@
 
         initMap();
         bindEvents();
-        setTimeout(() => showToast("🧃 Monster Energy Dhule • Click 'Route' to see animated blue line", 5000), 1000);
-        console.log("✅ Map ready with animated route feature.");
+        setTimeout(() => showToast("🧃 Monster Energy Dhule • Click 'Route' to see animated blue line (stays on map)", 5000), 1000);
+        console.log("✅ Map ready - route line stays visible until new route or refresh");
     })();
 </script>
 </body>
