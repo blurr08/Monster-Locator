@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Monster Energy • Dhule (5 Locations • Nearest First)</title>
+    <title>Monster Energy • Dhule (Nearest First • Smooth Fly)</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         * {
@@ -27,7 +27,6 @@
             filter: grayscale(100%) !important;
             opacity: 0.95;
         }
-        /* Monster Logo */
         .monster-logo {
             width: 38px;
             height: 38px;
@@ -44,7 +43,6 @@
             box-shadow: 0 0 0 2px black;
             text-shadow: 1px 1px 0 #000;
         }
-        /* LIQUID GLASS SIDEBAR */
         #sidebar {
             position: fixed;
             z-index: 15;
@@ -107,7 +105,6 @@
             flex-direction: column;
             gap: 12px;
         }
-        /* LIQUID GLASS CARDS */
         .monster-card {
             background: rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(12px) saturate(150%);
@@ -353,7 +350,6 @@
             background: rgba(255,255,255,0.4);
             border-radius: 10px;
         }
-        /* Highlight the nearest card slightly */
         .monster-card.nearest {
             border: 1px solid #ffcc00;
             background: rgba(255, 215, 0, 0.15);
@@ -391,53 +387,13 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
     (function() {
-        // ----- FIVE LOCATIONS IN DHULE (unsorted master list) -----
+        // ----- FIVE LOCATIONS -----
         const MASTER_LOCATIONS = [
-            {
-                id: "spot_main",
-                name: "Monster Energy Hub",
-                lat: 20.892272,
-                lng: 74.773925,
-                address: "Near Dhule City Center",
-                coordsDMS: "20°53'32.18\"N 74°46'26.13\"E",
-                tag: "MAIN"
-            },
-            {
-                id: "spot_square",
-                name: "Monster Energy Square",
-                lat: 20.911280555555555,
-                lng: 74.75695,
-                address: "Tower Chowk, Dhule",
-                coordsDMS: "20°54'40.61\"N 74°45'25.02\"E",
-                tag: "NEW"
-            },
-            {
-                id: "spot_third",
-                name: "Monster Energy Point",
-                lat: 20.90357777777778,
-                lng: 74.7496,
-                address: "Near Dhule Bus Stand",
-                coordsDMS: "20°54'12.88\"N 74°44'58.56\"E",
-                tag: "THIRD"
-            },
-            {
-                id: "spot_fourth",
-                name: "Monster Energy Plaza",
-                lat: 20.904041666666666,
-                lng: 74.75639444444444,
-                address: "Near Dhule Market",
-                coordsDMS: "20°54'14.55\"N 74°45'23.02\"E",
-                tag: "FOURTH"
-            },
-            {
-                id: "spot_fifth",
-                name: "Monster Energy North",
-                lat: 20.920369444444444,
-                lng: 74.76649166666666,
-                address: "North Dhule Area",
-                coordsDMS: "20°55'13.33\"N 74°45'59.37\"E",
-                tag: "FIFTH"
-            }
+            { id: "spot_main", name: "Monster Energy Hub", lat: 20.892272, lng: 74.773925, address: "Near Dhule City Center", coordsDMS: "20°53'32.18\"N 74°46'26.13\"E", tag: "MAIN" },
+            { id: "spot_square", name: "Monster Energy Square", lat: 20.911280555555555, lng: 74.75695, address: "Tower Chowk, Dhule", coordsDMS: "20°54'40.61\"N 74°45'25.02\"E", tag: "NEW" },
+            { id: "spot_third", name: "Monster Energy Point", lat: 20.90357777777778, lng: 74.7496, address: "Near Dhule Bus Stand", coordsDMS: "20°54'12.88\"N 74°44'58.56\"E", tag: "THIRD" },
+            { id: "spot_fourth", name: "Monster Energy Plaza", lat: 20.904041666666666, lng: 74.75639444444444, address: "Near Dhule Market", coordsDMS: "20°54'14.55\"N 74°45'23.02\"E", tag: "FOURTH" },
+            { id: "spot_fifth", name: "Monster Energy North", lat: 20.920369444444444, lng: 74.76649166666666, address: "North Dhule Area", coordsDMS: "20°55'13.33\"N 74°45'59.37\"E", tag: "FIFTH" }
         ];
 
         let map;
@@ -445,6 +401,7 @@
         let userMarker = null;
         let userLocation = null;
         let watchId = null;
+        let manualFlyInProgress = false;   // flag to prevent auto-fit during manual fly
 
         // DOM elements
         const spotContainer = document.getElementById('spotList');
@@ -492,30 +449,21 @@
             return m < 1000 ? Math.round(m) + ' m' : (m/1000).toFixed(1) + ' km';
         }
 
-        // Get locations sorted by distance (nearest first) if userLocation exists
         function getSortedLocations() {
-            if (!userLocation) {
-                return [...MASTER_LOCATIONS]; // return copy in original order
-            }
-            // Add distance to each and sort
-            const withDist = MASTER_LOCATIONS.map(loc => ({
+            if (!userLocation) return [...MASTER_LOCATIONS];
+            return [...MASTER_LOCATIONS].map(loc => ({
                 ...loc,
                 distance: distanceMeters(userLocation.lat, userLocation.lng, loc.lat, loc.lng)
-            }));
-            withDist.sort((a, b) => a.distance - b.distance);
-            return withDist;
+            })).sort((a, b) => a.distance - b.distance);
         }
 
-        // Build sidebar cards from sorted list, attach event listeners, highlight nearest
         function renderSidebar() {
             const sorted = getSortedLocations();
             spotContainer.innerHTML = '';
             sorted.forEach((loc, idx) => {
                 const card = document.createElement('div');
                 card.className = 'monster-card';
-                if (idx === 0 && userLocation) {
-                    card.classList.add('nearest'); // highlight the nearest
-                }
+                if (idx === 0 && userLocation) card.classList.add('nearest');
                 const distText = userLocation ? formatDist(loc.distance) : '—';
                 card.innerHTML = `
                     <div class="spot-name">
@@ -533,7 +481,6 @@
                 `;
                 spotContainer.appendChild(card);
             });
-            // Re-attach event listeners for all buttons
             document.querySelectorAll('.btn-take-me').forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     e.stopPropagation();
@@ -558,7 +505,6 @@
             return div.innerHTML;
         }
 
-        // Open Google Maps with route from user location to destination
         function openGoogleMapsRoute(destLat, destLng, destName) {
             if (!userLocation) {
                 showToast("📍 Please enable location first (click 'Get My Location')", 4000);
@@ -571,7 +517,6 @@
             showToast(`🧭 Opening Google Maps route to ${destName}...`, 3000);
         }
 
-        // Monster Energy map marker
         function createMonsterIcon() {
             const html = `<div style="width:36px;height:36px;background:radial-gradient(circle at 30% 35%, #1ecc00, #006600);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:1.4rem;color:white;font-family:'Impact',sans-serif;border:2px solid #ffcc00;box-shadow:0 0 0 2px black;">M</div>`;
             return L.divIcon({ html, iconSize: [36,36], iconAnchor: [18,18], popupAnchor: [0, -20] });
@@ -589,13 +534,7 @@
                 const icon = createMonsterIcon();
                 const marker = L.marker([loc.lat, loc.lng], { icon })
                     .addTo(map)
-                    .bindPopup(`
-                        <div style="text-align:center;">
-                            <strong>🧃 ${escapeHtml(loc.name)}</strong><br/>
-                            ${escapeHtml(loc.address)}<br/>
-                            <small>${loc.coordsDMS}</small>
-                        </div>
-                    `);
+                    .bindPopup(`<div style="text-align:center;"><strong>🧃 ${escapeHtml(loc.name)}</strong><br/>${escapeHtml(loc.address)}<br/><small>${loc.coordsDMS}</small></div>`);
                 markers.push({ marker, id: loc.id });
             });
         }
@@ -610,8 +549,10 @@
             }
         }
 
+        // Fixed flyToLocation: prevents auto-fit interference
         function flyToLocation(loc) {
             if (!map) return;
+            manualFlyInProgress = true;
             map.flyTo([loc.lat, loc.lng], 16, { duration: 1.2 });
             setTimeout(() => {
                 const markerObj = markers.find(m => m.id === loc.id);
@@ -623,20 +564,22 @@
                         setTimeout(() => { if (el) el.style.transform = ''; }, 400);
                     }
                 }
+                // Wait a bit longer before clearing the flag to avoid any late fitBounds
+                setTimeout(() => { manualFlyInProgress = false; }, 1500);
             }, 300);
             showToast(`🧃 Flying to ${loc.name}`, 2000);
         }
 
-        // Called whenever location updates: re-render sidebar (auto-sort), update distance labels, refit map
+        // Refresh UI after location update – but skip if manual fly is active
         function refreshUIAfterLocation() {
             renderUserMarker();
-            renderSidebar();      // this will sort and display nearest first
-            // Optionally refit map to include all spots + user
-            const allPoints = MASTER_LOCATIONS.map(l => [l.lat, l.lng]);
-            if (userLocation) allPoints.push([userLocation.lat, userLocation.lng]);
-            map.fitBounds(L.latLngBounds(allPoints), { padding: [60, 60] });
+            renderSidebar();
             updateStatusUI(true);
-            // Show nearest distance via toast
+            if (!manualFlyInProgress) {
+                const allPoints = MASTER_LOCATIONS.map(l => [l.lat, l.lng]);
+                if (userLocation) allPoints.push([userLocation.lat, userLocation.lng]);
+                map.fitBounds(L.latLngBounds(allPoints), { padding: [60, 60] });
+            }
             if (userLocation) {
                 const sorted = getSortedLocations();
                 if (sorted.length) {
@@ -656,7 +599,6 @@
                 (pos) => {
                     userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
                     refreshUIAfterLocation();
-                    
                     if (watchId) navigator.geolocation.clearWatch(watchId);
                     watchId = navigator.geolocation.watchPosition(
                         (newPos) => {
@@ -676,7 +618,7 @@
                     showToast(msg, 5000);
                     updateStatusUI(false);
                     statusText.innerText = 'Denied';
-                    renderSidebar(); // show unsorted with no distances
+                    renderSidebar();
                     const bounds = L.latLngBounds(MASTER_LOCATIONS.map(l => [l.lat, l.lng]));
                     map.fitBounds(bounds, { padding: [40, 40] });
                 },
@@ -707,7 +649,7 @@
             }).addTo(map);
             L.control.zoom({ position: 'bottomright' }).addTo(map);
             renderMarkers();
-            renderSidebar();   // initial unsorted
+            renderSidebar();
             updateStatusUI(false);
             map.on('dblclick', () => {
                 modal.classList.add('active');
@@ -737,7 +679,6 @@
             });
             modalClose.addEventListener('click', () => modal.classList.remove('active'));
             modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.remove('active'); });
-            // Keyboard shortcuts
             document.addEventListener('keydown', (e) => {
                 if (e.key === 'Escape') modal.classList.remove('active');
                 if (e.ctrlKey && e.shiftKey && e.key === 'L') { e.preventDefault(); getLocation(); }
@@ -752,8 +693,8 @@
 
         initMap();
         bindEvents();
-        setTimeout(() => showToast("🧃 Five Monster spots • Enable location to see nearest on top", 5000), 1000);
-        console.log("✅ Auto-sorting sidebar: nearest location rises to top");
+        setTimeout(() => showToast("🧃 Five spots • Click 'Take me' for smooth fly-in (no zoom out)", 5000), 1000);
+        console.log("✅ Fixed: 'Take me' now stays at location without zooming out.");
     })();
 </script>
 </body>
