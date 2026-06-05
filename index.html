@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Monster Energy • Dhule (5 Locations)</title>
+    <title>Monster Energy • Dhule (5 Locations • Nearest First)</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         * {
@@ -353,6 +353,12 @@
             background: rgba(255,255,255,0.4);
             border-radius: 10px;
         }
+        /* Highlight the nearest card slightly */
+        .monster-card.nearest {
+            border: 1px solid #ffcc00;
+            background: rgba(255, 215, 0, 0.15);
+            box-shadow: 0 0 12px rgba(255, 215, 0, 0.3);
+        }
     </style>
 </head>
 <body>
@@ -368,7 +374,7 @@
             <div class="tagline">⚡ Dhule • Maharashtra</div>
         </div>
     </div>
-    <div class="city-badge">📍 5 Monster spots in Dhule city</div>
+    <div class="city-badge">📍 5 Monster spots (nearest on top)</div>
     <div class="spot-container" id="spotList"></div>
     <div class="sidebar-footer">
         <button class="side-btn" id="refreshBtn">🔄 Refresh</button>
@@ -377,7 +383,7 @@
 </aside>
 
 <div id="globalToast" class="toast-notify"><span>🧃</span><span id="toastMsg"></span><span class="toast-close" id="closeToastBtn">✕</span></div>
-<div id="addModal" class="modal-overlay"><div class="modal-card"><h3>🧃 Monster Energy Dhule</h3><p>Five official spots. Click "Route" to open Google Maps with directions.</p><button id="modalCloseBtn" style="margin-top:15px;padding:8px 20px;">OK</button></div></div>
+<div id="addModal" class="modal-overlay"><div class="modal-card"><h3>🧃 Monster Energy Dhule</h3><p>Five spots. Enable location to see nearest first and distances.</p><button id="modalCloseBtn" style="margin-top:15px;padding:8px 20px;">OK</button></div></div>
 
 <button id="fab-toggle-sidebar" class="fab">🗂️</button>
 <button id="fab-locate" class="fab">📍</button>
@@ -385,10 +391,8 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
     (function() {
-        // ----- FIVE LOCATIONS IN DHULE -----
-        // New coordinates: 20°55'13.33"N 74°45'59.37"E
-        // Decimal: 20 + 55/60 + 13.33/3600 = 20.9203694444, 74 + 45/60 + 59.37/3600 = 74.7664916667
-        const LOCATIONS = [
+        // ----- FIVE LOCATIONS IN DHULE (unsorted master list) -----
+        const MASTER_LOCATIONS = [
             {
                 id: "spot_main",
                 name: "Monster Energy Hub",
@@ -488,16 +492,70 @@
             return m < 1000 ? Math.round(m) + ' m' : (m/1000).toFixed(1) + ' km';
         }
 
-        function updateAllDistanceLabels() {
+        // Get locations sorted by distance (nearest first) if userLocation exists
+        function getSortedLocations() {
             if (!userLocation) {
-                document.querySelectorAll('.distance-info').forEach(el => el.innerHTML = '📍 enable location');
-                return;
+                return [...MASTER_LOCATIONS]; // return copy in original order
             }
-            LOCATIONS.forEach(loc => {
-                const dist = distanceMeters(userLocation.lat, userLocation.lng, loc.lat, loc.lng);
-                const span = document.getElementById(`dist-${loc.id}`);
-                if (span) span.innerHTML = `📍 ${formatDist(dist)} away`;
+            // Add distance to each and sort
+            const withDist = MASTER_LOCATIONS.map(loc => ({
+                ...loc,
+                distance: distanceMeters(userLocation.lat, userLocation.lng, loc.lat, loc.lng)
+            }));
+            withDist.sort((a, b) => a.distance - b.distance);
+            return withDist;
+        }
+
+        // Build sidebar cards from sorted list, attach event listeners, highlight nearest
+        function renderSidebar() {
+            const sorted = getSortedLocations();
+            spotContainer.innerHTML = '';
+            sorted.forEach((loc, idx) => {
+                const card = document.createElement('div');
+                card.className = 'monster-card';
+                if (idx === 0 && userLocation) {
+                    card.classList.add('nearest'); // highlight the nearest
+                }
+                const distText = userLocation ? formatDist(loc.distance) : '—';
+                card.innerHTML = `
+                    <div class="spot-name">
+                        🧃 ${escapeHtml(loc.name)} <span>${escapeHtml(loc.tag)}</span>
+                    </div>
+                    <div class="address-detail">📍 ${escapeHtml(loc.address)}</div>
+                    <div class="coords-text">🧭 ${loc.coordsDMS}</div>
+                    <div class="action-row">
+                        <div class="btn-group">
+                            <button class="btn-take-me" data-id="${loc.id}">📍 Take me</button>
+                            <button class="btn-route" data-id="${loc.id}">🧭 Route (Google Maps)</button>
+                        </div>
+                        <div class="distance-info" id="dist-${loc.id}">📍 ${userLocation ? formatDist(loc.distance) + ' away' : 'enable location'}</div>
+                    </div>
+                `;
+                spotContainer.appendChild(card);
             });
+            // Re-attach event listeners for all buttons
+            document.querySelectorAll('.btn-take-me').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const id = btn.getAttribute('data-id');
+                    const loc = MASTER_LOCATIONS.find(l => l.id === id);
+                    if (loc) flyToLocation(loc);
+                });
+            });
+            document.querySelectorAll('.btn-route').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const id = btn.getAttribute('data-id');
+                    const loc = MASTER_LOCATIONS.find(l => l.id === id);
+                    if (loc) openGoogleMapsRoute(loc.lat, loc.lng, loc.name);
+                });
+            });
+        }
+
+        function escapeHtml(str) {
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
         }
 
         // Open Google Maps with route from user location to destination
@@ -511,53 +569,6 @@
             const url = `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${destination}&travelmode=driving`;
             window.open(url, '_blank');
             showToast(`🧭 Opening Google Maps route to ${destName}...`, 3000);
-        }
-
-        // Build sidebar cards
-        function buildSidebar() {
-            spotContainer.innerHTML = '';
-            LOCATIONS.forEach(loc => {
-                const card = document.createElement('div');
-                card.className = 'monster-card';
-                card.innerHTML = `
-                    <div class="spot-name">
-                        🧃 ${escapeHtml(loc.name)} <span>${escapeHtml(loc.tag)}</span>
-                    </div>
-                    <div class="address-detail">📍 ${escapeHtml(loc.address)}</div>
-                    <div class="coords-text">🧭 ${loc.coordsDMS}</div>
-                    <div class="action-row">
-                        <div class="btn-group">
-                            <button class="btn-take-me" data-id="${loc.id}">📍 Take me</button>
-                            <button class="btn-route" data-id="${loc.id}">🧭 Route (Google Maps)</button>
-                        </div>
-                        <div class="distance-info" id="dist-${loc.id}">📍 distance: —</div>
-                    </div>
-                `;
-                spotContainer.appendChild(card);
-            });
-            // Attach event listeners
-            document.querySelectorAll('.btn-take-me').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    const id = btn.getAttribute('data-id');
-                    const loc = LOCATIONS.find(l => l.id === id);
-                    if (loc) flyToLocation(loc);
-                });
-            });
-            document.querySelectorAll('.btn-route').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    const id = btn.getAttribute('data-id');
-                    const loc = LOCATIONS.find(l => l.id === id);
-                    if (loc) openGoogleMapsRoute(loc.lat, loc.lng, loc.name);
-                });
-            });
-        }
-
-        function escapeHtml(str) {
-            const div = document.createElement('div');
-            div.textContent = str;
-            return div.innerHTML;
         }
 
         // Monster Energy map marker
@@ -574,7 +585,7 @@
         function renderMarkers() {
             markers.forEach(m => map.removeLayer(m.marker));
             markers = [];
-            LOCATIONS.forEach(loc => {
+            MASTER_LOCATIONS.forEach(loc => {
                 const icon = createMonsterIcon();
                 const marker = L.marker([loc.lat, loc.lng], { icon })
                     .addTo(map)
@@ -616,6 +627,24 @@
             showToast(`🧃 Flying to ${loc.name}`, 2000);
         }
 
+        // Called whenever location updates: re-render sidebar (auto-sort), update distance labels, refit map
+        function refreshUIAfterLocation() {
+            renderUserMarker();
+            renderSidebar();      // this will sort and display nearest first
+            // Optionally refit map to include all spots + user
+            const allPoints = MASTER_LOCATIONS.map(l => [l.lat, l.lng]);
+            if (userLocation) allPoints.push([userLocation.lat, userLocation.lng]);
+            map.fitBounds(L.latLngBounds(allPoints), { padding: [60, 60] });
+            updateStatusUI(true);
+            // Show nearest distance via toast
+            if (userLocation) {
+                const sorted = getSortedLocations();
+                if (sorted.length) {
+                    showToast(`📍 Nearest spot: ${sorted[0].name} (${formatDist(sorted[0].distance)} away)`, 4000);
+                }
+            }
+        }
+
         function getLocation() {
             if (!navigator.geolocation) {
                 showToast("⚠️ Browser doesn't support geolocation", 3000);
@@ -626,25 +655,13 @@
             navigator.geolocation.getCurrentPosition(
                 (pos) => {
                     userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-                    renderUserMarker();
-                    updateAllDistanceLabels();
-                    updateStatusUI(true);
-                    const allPoints = LOCATIONS.map(l => [l.lat, l.lng]);
-                    allPoints.push([userLocation.lat, userLocation.lng]);
-                    map.fitBounds(L.latLngBounds(allPoints), { padding: [60, 60] });
-                    let nearest = Infinity;
-                    LOCATIONS.forEach(loc => {
-                        const d = distanceMeters(userLocation.lat, userLocation.lng, loc.lat, loc.lng);
-                        if (d < nearest) nearest = d;
-                    });
-                    showToast(`✅ Location set! Nearest spot is ${formatDist(nearest)} away.`, 4500);
+                    refreshUIAfterLocation();
                     
                     if (watchId) navigator.geolocation.clearWatch(watchId);
                     watchId = navigator.geolocation.watchPosition(
                         (newPos) => {
                             userLocation = { lat: newPos.coords.latitude, lng: newPos.coords.longitude };
-                            renderUserMarker();
-                            updateAllDistanceLabels();
+                            refreshUIAfterLocation();
                         },
                         err => console.warn("Watch error:", err),
                         { enableHighAccuracy: true, maximumAge: 10000 }
@@ -659,7 +676,8 @@
                     showToast(msg, 5000);
                     updateStatusUI(false);
                     statusText.innerText = 'Denied';
-                    const bounds = L.latLngBounds(LOCATIONS.map(l => [l.lat, l.lng]));
+                    renderSidebar(); // show unsorted with no distances
+                    const bounds = L.latLngBounds(MASTER_LOCATIONS.map(l => [l.lat, l.lng]));
                     map.fitBounds(bounds, { padding: [40, 40] });
                 },
                 { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
@@ -669,18 +687,18 @@
         function refreshMap() {
             renderMarkers();
             if (userLocation) {
-                renderUserMarker();
-                updateAllDistanceLabels();
-                updateStatusUI(true);
+                refreshUIAfterLocation();
             } else {
-                updateAllDistanceLabels();
+                renderSidebar();
                 updateStatusUI(false);
+                const bounds = L.latLngBounds(MASTER_LOCATIONS.map(l => [l.lat, l.lng]));
+                map.fitBounds(bounds, { padding: [40, 40] });
             }
             showToast("🔄 Map refreshed", 1500);
         }
 
         function initMap() {
-            const bounds = L.latLngBounds(LOCATIONS.map(l => [l.lat, l.lng]));
+            const bounds = L.latLngBounds(MASTER_LOCATIONS.map(l => [l.lat, l.lng]));
             map = L.map('map').fitBounds(bounds, { padding: [40, 40] });
             L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
                 attribution: '&copy; OSM & CartoDB',
@@ -689,8 +707,7 @@
             }).addTo(map);
             L.control.zoom({ position: 'bottomright' }).addTo(map);
             renderMarkers();
-            buildSidebar();
-            updateAllDistanceLabels();
+            renderSidebar();   // initial unsorted
             updateStatusUI(false);
             map.on('dblclick', () => {
                 modal.classList.add('active');
@@ -711,37 +728,32 @@
             toastDiv.addEventListener('click', (e) => {
                 if (e.target === closeToast) return;
                 if (userLocation) {
-                    let nearest = LOCATIONS[0];
-                    let minD = Infinity;
-                    LOCATIONS.forEach(loc => {
-                        const d = distanceMeters(userLocation.lat, userLocation.lng, loc.lat, loc.lng);
-                        if (d < minD) { minD = d; nearest = loc; }
-                    });
-                    flyToLocation(nearest);
+                    const sorted = getSortedLocations();
+                    if (sorted.length) flyToLocation(sorted[0]);
                 } else {
-                    flyToLocation(LOCATIONS[0]);
+                    flyToLocation(MASTER_LOCATIONS[0]);
                 }
                 toastDiv.classList.remove('show');
             });
             modalClose.addEventListener('click', () => modal.classList.remove('active'));
             modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.remove('active'); });
-            // Keyboard shortcuts (Ctrl+Shift+1..5)
+            // Keyboard shortcuts
             document.addEventListener('keydown', (e) => {
                 if (e.key === 'Escape') modal.classList.remove('active');
                 if (e.ctrlKey && e.shiftKey && e.key === 'L') { e.preventDefault(); getLocation(); }
                 if (e.ctrlKey && e.shiftKey && e.key === 'B') { e.preventDefault(); sidebar.classList.toggle('collapsed'); }
-                if (e.ctrlKey && e.shiftKey && e.key === '1') { e.preventDefault(); flyToLocation(LOCATIONS[0]); }
-                if (e.ctrlKey && e.shiftKey && e.key === '2') { e.preventDefault(); flyToLocation(LOCATIONS[1]); }
-                if (e.ctrlKey && e.shiftKey && e.key === '3') { e.preventDefault(); flyToLocation(LOCATIONS[2]); }
-                if (e.ctrlKey && e.shiftKey && e.key === '4') { e.preventDefault(); flyToLocation(LOCATIONS[3]); }
-                if (e.ctrlKey && e.shiftKey && e.key === '5') { e.preventDefault(); flyToLocation(LOCATIONS[4]); }
+                if (e.ctrlKey && e.shiftKey && e.key === '1') { e.preventDefault(); flyToLocation(MASTER_LOCATIONS[0]); }
+                if (e.ctrlKey && e.shiftKey && e.key === '2') { e.preventDefault(); flyToLocation(MASTER_LOCATIONS[1]); }
+                if (e.ctrlKey && e.shiftKey && e.key === '3') { e.preventDefault(); flyToLocation(MASTER_LOCATIONS[2]); }
+                if (e.ctrlKey && e.shiftKey && e.key === '4') { e.preventDefault(); flyToLocation(MASTER_LOCATIONS[3]); }
+                if (e.ctrlKey && e.shiftKey && e.key === '5') { e.preventDefault(); flyToLocation(MASTER_LOCATIONS[4]); }
             });
         }
 
         initMap();
         bindEvents();
-        setTimeout(() => showToast("🧃 Five Monster spots in Dhule! Click 'Route' for directions.", 5000), 1000);
-        console.log("✅ Five Dhule locations with liquid glass UI.");
+        setTimeout(() => showToast("🧃 Five Monster spots • Enable location to see nearest on top", 5000), 1000);
+        console.log("✅ Auto-sorting sidebar: nearest location rises to top");
     })();
 </script>
 </body>
