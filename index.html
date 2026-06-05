@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Monster Energy • Dhule (Liquid Glass)</title>
+    <title>Monster Energy • Dhule (5 Locations)</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         * {
@@ -53,12 +53,12 @@
             transform: translateY(-50%);
             width: 380px;
             max-height: calc(100vh - 48px);
-            background: rgba(20, 25, 30, 0.55);
-            backdrop-filter: blur(12px) saturate(180%);
-            -webkit-backdrop-filter: blur(12px) saturate(180%);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.3);
             border-radius: 32px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2);
             display: flex;
             flex-direction: column;
             overflow: hidden;
@@ -71,7 +71,7 @@
         }
         .sidebar-header {
             padding: 22px 20px 14px 22px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
             display: flex;
             align-items: center;
             gap: 14px;
@@ -82,20 +82,22 @@
             font-weight: 800;
             letter-spacing: -0.5px;
             text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            color: white;
         }
         .tagline {
             font-size: 0.7rem;
-            color: #ddd;
+            color: #eee;
         }
         .city-badge {
             display: inline-block;
-            background: rgba(0, 0, 0, 0.4);
+            background: rgba(255, 255, 255, 0.15);
             margin: 8px 0 0 22px;
             padding: 5px 14px;
             border-radius: 40px;
             font-size: 0.7rem;
             backdrop-filter: blur(4px);
-            border: 0.5px solid rgba(255,255,255,0.2);
+            border: 0.5px solid rgba(255,255,255,0.3);
+            color: #fff;
         }
         .spot-container {
             flex: 1;
@@ -107,19 +109,21 @@
         }
         /* LIQUID GLASS CARDS */
         .monster-card {
-            background: rgba(28, 32, 36, 0.65);
-            backdrop-filter: blur(8px) saturate(150%);
-            -webkit-backdrop-filter: blur(8px) saturate(150%);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(12px) saturate(150%);
+            -webkit-backdrop-filter: blur(12px) saturate(150%);
+            border: 1px solid rgba(255, 255, 255, 0.35);
             border-radius: 28px;
             padding: 16px;
             transition: 0.2s;
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+            color: white;
         }
         .monster-card:hover {
-            background: rgba(40, 45, 50, 0.75);
-            border-color: rgba(255, 215, 0, 0.5);
+            background: rgba(255, 255, 255, 0.18);
+            border-color: rgba(255, 215, 0, 0.6);
             transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
         }
         .spot-name {
             font-size: 1rem;
@@ -139,7 +143,7 @@
         }
         .address-detail {
             font-size: 0.75rem;
-            color: #ddd;
+            color: #f0f0f0;
             margin: 6px 0;
         }
         .coords-text {
@@ -165,7 +169,6 @@
         }
         .btn-take-me, .btn-route {
             border: none;
-            color: white;
             font-weight: bold;
             padding: 8px 16px;
             border-radius: 40px;
@@ -180,7 +183,8 @@
         }
         .btn-take-me {
             background: rgba(0, 102, 204, 0.85);
-            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+            color: white;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
         }
         .btn-take-me:hover {
             background: #0088ff;
@@ -188,6 +192,7 @@
         }
         .btn-route {
             background: rgba(40, 167, 69, 0.85);
+            color: white;
         }
         .btn-route:hover {
             background: #34ce57;
@@ -200,35 +205,36 @@
             border-radius: 50px;
             white-space: nowrap;
             backdrop-filter: blur(4px);
+            color: white;
         }
         .sidebar-footer {
             padding: 12px 16px 18px;
-            border-top: 1px solid rgba(255, 255, 255, 0.15);
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
             display: flex;
             gap: 12px;
             background: rgba(0, 0, 0, 0.2);
         }
         .side-btn {
             flex: 1;
-            background: rgba(28, 28, 28, 0.7);
+            background: rgba(0, 0, 0, 0.5);
             backdrop-filter: blur(4px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
             border-radius: 40px;
             padding: 10px 0;
             font-weight: 600;
             font-size: 0.75rem;
-            color: #ddd;
+            color: white;
             cursor: pointer;
             text-align: center;
             transition: 0.2s;
         }
         .side-btn.primary {
-            background: rgba(255, 255, 255, 0.9);
+            background: rgba(255, 255, 255, 0.85);
             color: #000;
             border-color: rgba(255,255,255,0.5);
         }
         .side-btn:hover {
-            background: rgba(60, 60, 70, 0.8);
+            background: rgba(100, 100, 120, 0.7);
         }
         .fab {
             position: fixed;
@@ -237,9 +243,9 @@
             width: 48px;
             height: 48px;
             border-radius: 50%;
-            background: rgba(17, 17, 17, 0.7);
+            background: rgba(0, 0, 0, 0.6);
             backdrop-filter: blur(8px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.4);
             color: white;
             font-size: 1.3rem;
             cursor: pointer;
@@ -261,9 +267,9 @@
             bottom: 30px;
             left: 50%;
             transform: translateX(-50%) translateY(120px);
-            background: rgba(31, 31, 31, 0.85);
+            background: rgba(0, 0, 0, 0.7);
             backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
             border-radius: 60px;
             padding: 12px 24px;
             display: flex;
@@ -273,6 +279,7 @@
             font-size: 0.85rem;
             transition: transform 0.4s cubic-bezier(0.2, 0.9, 0.4, 1.1);
             white-space: nowrap;
+            color: white;
         }
         .toast-notify.show { transform: translateX(-50%) translateY(0); }
         .toast-close { margin-left: 8px; opacity: 0.6; cursor: pointer; }
@@ -281,15 +288,16 @@
             z-index: 15;
             top: 20px;
             right: 20px;
-            background: rgba(26, 26, 26, 0.7);
+            background: rgba(0, 0, 0, 0.6);
             backdrop-filter: blur(8px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
             border-radius: 40px;
             padding: 6px 14px;
             font-size: 0.7rem;
             display: flex;
             align-items: center;
             gap: 8px;
+            color: white;
         }
         .dot {
             width: 8px;
@@ -301,8 +309,8 @@
         .modal-overlay {
             position: fixed;
             inset: 0;
-            background: rgba(0,0,0,0.6);
-            backdrop-filter: blur(8px);
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(10px);
             z-index: 60;
             display: flex;
             align-items: center;
@@ -313,14 +321,15 @@
         }
         .modal-overlay.active { opacity: 1; pointer-events: auto; }
         .modal-card {
-            background: rgba(21, 21, 21, 0.85);
+            background: rgba(20, 20, 20, 0.8);
             backdrop-filter: blur(20px);
-            border: 1px solid rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.3);
             border-radius: 32px;
             width: 90%;
             max-width: 360px;
             padding: 24px;
             text-align: center;
+            color: white;
         }
         @media (max-width: 640px) {
             #sidebar { left: 12px; right: 12px; width: auto; top: auto; bottom: 12px; transform: translateY(0); max-height: 55vh; }
@@ -332,6 +341,17 @@
             .btn-take-me, .btn-route { justify-content: center; }
             .distance-info { white-space: normal; text-align: center; margin-top: 5px; width: 100%; }
             .action-row { flex-direction: column; align-items: stretch; }
+        }
+        .spot-container::-webkit-scrollbar {
+            width: 4px;
+        }
+        .spot-container::-webkit-scrollbar-track {
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+        }
+        .spot-container::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.4);
+            border-radius: 10px;
         }
     </style>
 </head>
@@ -348,7 +368,7 @@
             <div class="tagline">⚡ Dhule • Maharashtra</div>
         </div>
     </div>
-    <div class="city-badge">📍 2 Monster spots in Dhule city</div>
+    <div class="city-badge">📍 5 Monster spots in Dhule city</div>
     <div class="spot-container" id="spotList"></div>
     <div class="sidebar-footer">
         <button class="side-btn" id="refreshBtn">🔄 Refresh</button>
@@ -357,7 +377,7 @@
 </aside>
 
 <div id="globalToast" class="toast-notify"><span>🧃</span><span id="toastMsg"></span><span class="toast-close" id="closeToastBtn">✕</span></div>
-<div id="addModal" class="modal-overlay"><div class="modal-card"><h3>🧃 Monster Energy Dhule</h3><p>Two official spots. Click "Route" to open Google Maps with directions.</p><button id="modalCloseBtn" style="margin-top:15px;padding:8px 20px;">OK</button></div></div>
+<div id="addModal" class="modal-overlay"><div class="modal-card"><h3>🧃 Monster Energy Dhule</h3><p>Five official spots. Click "Route" to open Google Maps with directions.</p><button id="modalCloseBtn" style="margin-top:15px;padding:8px 20px;">OK</button></div></div>
 
 <button id="fab-toggle-sidebar" class="fab">🗂️</button>
 <button id="fab-locate" class="fab">📍</button>
@@ -365,7 +385,9 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
     (function() {
-        // ----- TWO EXACT LOCATIONS IN DHULE -----
+        // ----- FIVE LOCATIONS IN DHULE -----
+        // New coordinates: 20°55'13.33"N 74°45'59.37"E
+        // Decimal: 20 + 55/60 + 13.33/3600 = 20.9203694444, 74 + 45/60 + 59.37/3600 = 74.7664916667
         const LOCATIONS = [
             {
                 id: "spot_main",
@@ -384,6 +406,33 @@
                 address: "Tower Chowk, Dhule",
                 coordsDMS: "20°54'40.61\"N 74°45'25.02\"E",
                 tag: "NEW"
+            },
+            {
+                id: "spot_third",
+                name: "Monster Energy Point",
+                lat: 20.90357777777778,
+                lng: 74.7496,
+                address: "Near Dhule Bus Stand",
+                coordsDMS: "20°54'12.88\"N 74°44'58.56\"E",
+                tag: "THIRD"
+            },
+            {
+                id: "spot_fourth",
+                name: "Monster Energy Plaza",
+                lat: 20.904041666666666,
+                lng: 74.75639444444444,
+                address: "Near Dhule Market",
+                coordsDMS: "20°54'14.55\"N 74°45'23.02\"E",
+                tag: "FOURTH"
+            },
+            {
+                id: "spot_fifth",
+                name: "Monster Energy North",
+                lat: 20.920369444444444,
+                lng: 74.76649166666666,
+                address: "North Dhule Area",
+                coordsDMS: "20°55'13.33\"N 74°45'59.37\"E",
+                tag: "FIFTH"
             }
         ];
 
@@ -676,20 +725,23 @@
             });
             modalClose.addEventListener('click', () => modal.classList.remove('active'));
             modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.remove('active'); });
-            // Keyboard shortcuts
+            // Keyboard shortcuts (Ctrl+Shift+1..5)
             document.addEventListener('keydown', (e) => {
                 if (e.key === 'Escape') modal.classList.remove('active');
                 if (e.ctrlKey && e.shiftKey && e.key === 'L') { e.preventDefault(); getLocation(); }
                 if (e.ctrlKey && e.shiftKey && e.key === 'B') { e.preventDefault(); sidebar.classList.toggle('collapsed'); }
                 if (e.ctrlKey && e.shiftKey && e.key === '1') { e.preventDefault(); flyToLocation(LOCATIONS[0]); }
                 if (e.ctrlKey && e.shiftKey && e.key === '2') { e.preventDefault(); flyToLocation(LOCATIONS[1]); }
+                if (e.ctrlKey && e.shiftKey && e.key === '3') { e.preventDefault(); flyToLocation(LOCATIONS[2]); }
+                if (e.ctrlKey && e.shiftKey && e.key === '4') { e.preventDefault(); flyToLocation(LOCATIONS[3]); }
+                if (e.ctrlKey && e.shiftKey && e.key === '5') { e.preventDefault(); flyToLocation(LOCATIONS[4]); }
             });
         }
 
         initMap();
         bindEvents();
-        setTimeout(() => showToast("🧃 Liquid Glass UI • Monster Energy Dhule", 4000), 1000);
-        console.log("✅ Liquid glass effect applied to sidebar and cards.");
+        setTimeout(() => showToast("🧃 Five Monster spots in Dhule! Click 'Route' for directions.", 5000), 1000);
+        console.log("✅ Five Dhule locations with liquid glass UI.");
     })();
 </script>
 </body>
