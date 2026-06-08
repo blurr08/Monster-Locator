@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Monster Energy • Dhule (Real Road Distance)</title>
+    <title>Monster Energy • Dhule (Real Road Distances)</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         * {
@@ -387,7 +387,7 @@
 </aside>
 
 <div id="globalToast" class="toast-notify"><span>🧃</span><span id="toastMsg"></span><span class="toast-close" id="closeToastBtn">✕</span></div>
-<div id="addModal" class="modal-overlay"><div class="modal-card"><h3>🧃 Monster Energy Dhule</h3><p>Real road distances using OSRM. Click "Get My Location".</p><button id="modalCloseBtn" style="margin-top:15px;padding:8px 20px;">OK</button></div></div>
+<div id="addModal" class="modal-overlay"><div class="modal-card"><h3>🧃 Monster Energy Dhule</h3><p>Real road distances using OSRM. Touch the map to pan/zoom freely.</p><button id="modalCloseBtn" style="margin-top:15px;padding:8px 20px;">OK</button></div></div>
 
 <button id="fab-toggle-sidebar" class="fab">🗂️</button>
 <button id="fab-locate" class="fab">📍</button>
@@ -410,7 +410,8 @@
         let userLocation = null;
         let watchId = null;
         let manualFlyInProgress = false;
-        let distanceFetchQueue = []; // for aborting? not needed but prevent overlapping
+        let userInteracting = false;      // NEW: flag to prevent auto-fit during touch/drag
+        let roadDistanceCache = new Map();
 
         // DOM elements
         const spotContainer = document.getElementById('spotList');
@@ -466,51 +467,15 @@
                 const response = await fetch(url);
                 const data = await response.json();
                 if (data.code === 'Ok' && data.routes && data.routes.length > 0) {
-                    return data.routes[0].distance; // meters
-                } else {
-                    throw new Error('No route');
+                    return data.routes[0].distance;
                 }
+                return null;
             } catch (err) {
-                console.warn('OSRM fetch failed, using straight-line', err);
+                console.warn('OSRM fetch failed', err);
                 return null;
             }
         }
 
-        // Update a specific distance display with loading and then final value
-        async function updateDistanceForLocation(locId, originLat, originLng, destLat, destLng) {
-            const span = document.getElementById(`dist-${locId}`);
-            if (!span) return;
-            // Set loading state
-            span.innerHTML = `🔄 road...`;
-            span.classList.add('distance-loading');
-            const drivingMeters = await fetchDrivingDistance(originLat, originLng, destLat, destLng);
-            span.classList.remove('distance-loading');
-            if (drivingMeters !== null) {
-                span.innerHTML = `🚗 ${formatDistance(drivingMeters)}`;
-            } else {
-                // fallback to straight line
-                const straight = straightLineMeters(originLat, originLng, destLat, destLng);
-                span.innerHTML = `⚠️ ${formatDistance(straight)} (straight)`;
-            }
-        }
-
-        // After location is known, refresh all distances (real road)
-        async function refreshAllRoadDistances() {
-            if (!userLocation) return;
-            // For each location, fetch sequentially to avoid overwhelming API (5 calls is fine)
-            for (const loc of MASTER_LOCATIONS) {
-                await updateDistanceForLocation(loc.id, userLocation.lat, userLocation.lng, loc.lat, loc.lng);
-            }
-            // After distances updated, re-sort sidebar based on new values? Sorting currently uses straight-line (we have distances stored in loc objects)
-            // Since we now have road distances but not stored in a global variable, we need to re-sort using the actual driving distances.
-            // We'll fetch all distances, then sort and re-render sidebar.
-            // However, to keep it clean, we will fetch distances, store them, then re-render sidebar with updated distances and sort by road distance.
-            // Simpler: after all distances fetched, we can just re-render sidebar using a new function that uses fetched distances.
-            await reorderSidebarByRoadDistance();
-        }
-
-        // Helper: get road distance for a location (async, but we'll cache in a Map)
-        let roadDistanceCache = new Map();
         async function getRoadDistance(loc) {
             if (!userLocation) return null;
             const key = `${loc.id}_${userLocation.lat.toFixed(4)}_${userLocation.lng.toFixed(4)}`;
@@ -520,35 +485,31 @@
             return dist;
         }
 
-        async function reorderSidebarByRoadDistance() {
+        // Render sidebar with road distances and nearest-first sorting
+        async function renderSidebarWithRoadDistances() {
             if (!userLocation) {
-                renderSidebar(); // default unsorted
+                renderSidebarFallback();
                 return;
             }
-            // Fetch all road distances concurrently
-            const promises = MASTER_LOCATIONS.map(async (loc) => {
+            // Fetch all road distances
+            const locsWithDist = await Promise.all(MASTER_LOCATIONS.map(async (loc) => {
                 const roadDist = await getRoadDistance(loc);
                 return { ...loc, roadDistance: roadDist };
-            });
-            const locsWithDist = await Promise.all(promises);
-            // Sort by road distance (if null, push to bottom)
+            }));
+            // Sort by road distance (nulls go to bottom)
             locsWithDist.sort((a, b) => {
                 if (a.roadDistance === null && b.roadDistance === null) return 0;
                 if (a.roadDistance === null) return 1;
                 if (b.roadDistance === null) return -1;
                 return a.roadDistance - b.roadDistance;
             });
-            // Render sidebar with these distances
-            renderSidebarWithDistances(locsWithDist);
-        }
-
-        function renderSidebarWithDistances(locsWithDist) {
+            // Render
             spotContainer.innerHTML = '';
             locsWithDist.forEach((loc, idx) => {
                 const card = document.createElement('div');
                 card.className = 'monster-card';
-                if (idx === 0 && userLocation) card.classList.add('nearest');
-                const distanceText = (loc.roadDistance !== null && userLocation) ? `🚗 ${formatDistance(loc.roadDistance)}` : (userLocation ? '🔄 road...' : '📍 enable location');
+                if (idx === 0) card.classList.add('nearest');
+                const distanceText = (loc.roadDistance !== null) ? `🚗 ${formatDistance(loc.roadDistance)}` : '⚠️ route unavailable';
                 card.innerHTML = `
                     <div class="spot-name">
                         🧃 ${escapeHtml(loc.name)} <span>${escapeHtml(loc.tag)}</span>
@@ -565,38 +526,15 @@
                 `;
                 spotContainer.appendChild(card);
             });
-            // Re-attach event listeners
-            document.querySelectorAll('.btn-take-me').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    const id = btn.getAttribute('data-id');
-                    const loc = MASTER_LOCATIONS.find(l => l.id === id);
-                    if (loc) flyToLocation(loc);
-                });
-            });
-            document.querySelectorAll('.btn-route').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    const id = btn.getAttribute('data-id');
-                    const loc = MASTER_LOCATIONS.find(l => l.id === id);
-                    if (loc) openGoogleMapsRoute(loc.lat, loc.lng, loc.name);
-                });
-            });
-            // If we have distances and userLocation, also update the cache to avoid duplicate fetches
+            attachButtonEvents();
         }
 
-        // Fallback simple render without distances
-        function renderSidebar() {
-            const sorted = userLocation ? [...MASTER_LOCATIONS].map(loc => ({
-                ...loc,
-                distance: straightLineMeters(userLocation.lat, userLocation.lng, loc.lat, loc.lng)
-            })).sort((a,b) => a.distance - b.distance) : MASTER_LOCATIONS;
+        function renderSidebarFallback() {
+            // No location: show unsorted, no distances
             spotContainer.innerHTML = '';
-            sorted.forEach((loc, idx) => {
+            MASTER_LOCATIONS.forEach(loc => {
                 const card = document.createElement('div');
                 card.className = 'monster-card';
-                if (idx === 0 && userLocation) card.classList.add('nearest');
-                const distText = userLocation ? `📍 ${formatDistance(loc.distance)} (straight)` : '📍 enable location';
                 card.innerHTML = `
                     <div class="spot-name">
                         🧃 ${escapeHtml(loc.name)} <span>${escapeHtml(loc.tag)}</span>
@@ -608,27 +546,35 @@
                             <button class="btn-take-me" data-id="${loc.id}">📍 Take me</button>
                             <button class="btn-route" data-id="${loc.id}">🧭 Route (Google Maps)</button>
                         </div>
-                        <div class="distance-info" id="dist-${loc.id}">${distText}</div>
+                        <div class="distance-info">📍 enable location</div>
                     </div>
                 `;
                 spotContainer.appendChild(card);
             });
+            attachButtonEvents();
+        }
+
+        function attachButtonEvents() {
             document.querySelectorAll('.btn-take-me').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    const id = btn.getAttribute('data-id');
-                    const loc = MASTER_LOCATIONS.find(l => l.id === id);
-                    if (loc) flyToLocation(loc);
-                });
+                btn.removeEventListener('click', takeMeHandler);
+                btn.addEventListener('click', takeMeHandler);
             });
             document.querySelectorAll('.btn-route').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    const id = btn.getAttribute('data-id');
-                    const loc = MASTER_LOCATIONS.find(l => l.id === id);
-                    if (loc) openGoogleMapsRoute(loc.lat, loc.lng, loc.name);
-                });
+                btn.removeEventListener('click', routeHandler);
+                btn.addEventListener('click', routeHandler);
             });
+        }
+        function takeMeHandler(e) {
+            e.stopPropagation();
+            const id = e.currentTarget.getAttribute('data-id');
+            const loc = MASTER_LOCATIONS.find(l => l.id === id);
+            if (loc) flyToLocation(loc);
+        }
+        function routeHandler(e) {
+            e.stopPropagation();
+            const id = e.currentTarget.getAttribute('data-id');
+            const loc = MASTER_LOCATIONS.find(l => l.id === id);
+            if (loc) openGoogleMapsRoute(loc.lat, loc.lng, loc.name);
         }
 
         function escapeHtml(str) {
@@ -700,28 +646,32 @@
             showToast(`🧃 Flying to ${loc.name}`, 2000);
         }
 
-        async function refreshUIAfterLocation() {
+        // Only auto-fit bounds when user is not interacting with the map
+        function autoFitBounds() {
+            if (manualFlyInProgress || userInteracting) return;
+            if (!userLocation) return;
+            const allPoints = MASTER_LOCATIONS.map(l => [l.lat, l.lng]);
+            allPoints.push([userLocation.lat, userLocation.lng]);
+            map.fitBounds(L.latLngBounds(allPoints), { padding: [60, 60] });
+        }
+
+        async function refreshUIAfterLocation(shouldFitBounds = true) {
             renderUserMarker();
             if (userLocation) {
-                roadDistanceCache.clear(); // clear cache because origin changed
-                await reorderSidebarByRoadDistance(); // fetches road distances and sorts
+                roadDistanceCache.clear();
+                await renderSidebarWithRoadDistances();
                 updateStatusUI(true);
-                if (!manualFlyInProgress) {
-                    const allPoints = MASTER_LOCATIONS.map(l => [l.lat, l.lng]);
-                    allPoints.push([userLocation.lat, userLocation.lng]);
-                    map.fitBounds(L.latLngBounds(allPoints), { padding: [60, 60] });
-                }
-                // Show nearest by road distance (after sorting)
-                const nearestId = document.querySelector('.monster-card.nearest .btn-take-me')?.getAttribute('data-id');
-                if (nearestId) {
-                    const nearestLoc = MASTER_LOCATIONS.find(l => l.id === nearestId);
-                    if (nearestLoc) {
-                        const roadDist = await getRoadDistance(nearestLoc);
-                        if (roadDist) showToast(`📍 Nearest: ${nearestLoc.name} (${formatDistance(roadDist)})`, 4000);
+                if (shouldFitBounds) autoFitBounds();
+                // Show nearest info via toast
+                const nearestCard = document.querySelector('.monster-card.nearest');
+                if (nearestCard) {
+                    const nameSpan = nearestCard.querySelector('.spot-name');
+                    if (nameSpan) {
+                        showToast(`📍 Nearest: ${nameSpan.innerText.split('🧃')[1]?.trim() || 'spot'}`, 4000);
                     }
                 }
             } else {
-                renderSidebar();
+                renderSidebarFallback();
                 updateStatusUI(false);
             }
         }
@@ -734,14 +684,14 @@
             showToast("📍 Requesting location...", 2000);
             statusText.innerText = 'Requesting...';
             navigator.geolocation.getCurrentPosition(
-                (pos) => {
+                async (pos) => {
                     userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-                    refreshUIAfterLocation();
+                    await refreshUIAfterLocation(true); // fit bounds on first acquisition
                     if (watchId) navigator.geolocation.clearWatch(watchId);
                     watchId = navigator.geolocation.watchPosition(
                         async (newPos) => {
                             userLocation = { lat: newPos.coords.latitude, lng: newPos.coords.longitude };
-                            await refreshUIAfterLocation();
+                            await refreshUIAfterLocation(false); // no auto-fit on background updates
                         },
                         err => console.warn("Watch error:", err),
                         { enableHighAccuracy: true, maximumAge: 10000 }
@@ -756,7 +706,7 @@
                     showToast(msg, 5000);
                     updateStatusUI(false);
                     statusText.innerText = 'Denied';
-                    renderSidebar();
+                    renderSidebarFallback();
                     const bounds = L.latLngBounds(MASTER_LOCATIONS.map(l => [l.lat, l.lng]));
                     map.fitBounds(bounds, { padding: [40, 40] });
                 },
@@ -767,9 +717,9 @@
         function refreshMap() {
             renderMarkers();
             if (userLocation) {
-                refreshUIAfterLocation();
+                refreshUIAfterLocation(true);
             } else {
-                renderSidebar();
+                renderSidebarFallback();
                 updateStatusUI(false);
                 const bounds = L.latLngBounds(MASTER_LOCATIONS.map(l => [l.lat, l.lng]));
                 map.fitBounds(bounds, { padding: [40, 40] });
@@ -787,11 +737,16 @@
             }).addTo(map);
             L.control.zoom({ position: 'bottomright' }).addTo(map);
             renderMarkers();
-            renderSidebar();
+            renderSidebarFallback();
             updateStatusUI(false);
             map.on('dblclick', () => {
                 modal.classList.add('active');
                 setTimeout(() => modal.classList.remove('active'), 3000);
+            });
+            // Detect user interaction (touch/mouse) to block auto-fit
+            map.on('dragstart zoomstart', () => { userInteracting = true; });
+            map.on('dragend zoomend', () => {
+                setTimeout(() => { userInteracting = false; }, 500);
             });
         }
 
@@ -836,8 +791,8 @@
 
         initMap();
         bindEvents();
-        setTimeout(() => showToast("🧃 Real road distances (OSRM) – accurate driving km", 5000), 1000);
-        console.log("✅ Road-accurate distances via OSRM routing.");
+        setTimeout(() => showToast("🧃 Real road distances • Touch the map freely – it won't jump back", 5000), 1000);
+        console.log("✅ Fixed: map no longer auto-centers while you pan/zoom");
     })();
 </script>
 </body>
