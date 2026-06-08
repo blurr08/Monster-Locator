@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Monster Energy • Dhule (Nearest First • Smooth Fly)</title>
+    <title>Monster Energy • Dhule (Real Road Distance)</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         * {
@@ -355,6 +355,14 @@
             background: rgba(255, 215, 0, 0.15);
             box-shadow: 0 0 12px rgba(255, 215, 0, 0.3);
         }
+        .distance-loading {
+            opacity: 0.7;
+            animation: pulse 1s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 0.7; }
+            50% { opacity: 1; }
+        }
     </style>
 </head>
 <body>
@@ -370,7 +378,7 @@
             <div class="tagline">⚡ Dhule • Maharashtra</div>
         </div>
     </div>
-    <div class="city-badge">📍 5 Monster spots (nearest on top)</div>
+    <div class="city-badge">📍 5 spots • Real road distance</div>
     <div class="spot-container" id="spotList"></div>
     <div class="sidebar-footer">
         <button class="side-btn" id="refreshBtn">🔄 Refresh</button>
@@ -379,7 +387,7 @@
 </aside>
 
 <div id="globalToast" class="toast-notify"><span>🧃</span><span id="toastMsg"></span><span class="toast-close" id="closeToastBtn">✕</span></div>
-<div id="addModal" class="modal-overlay"><div class="modal-card"><h3>🧃 Monster Energy Dhule</h3><p>Five spots. Enable location to see nearest first and distances.</p><button id="modalCloseBtn" style="margin-top:15px;padding:8px 20px;">OK</button></div></div>
+<div id="addModal" class="modal-overlay"><div class="modal-card"><h3>🧃 Monster Energy Dhule</h3><p>Real road distances using OSRM. Click "Get My Location".</p><button id="modalCloseBtn" style="margin-top:15px;padding:8px 20px;">OK</button></div></div>
 
 <button id="fab-toggle-sidebar" class="fab">🗂️</button>
 <button id="fab-locate" class="fab">📍</button>
@@ -401,7 +409,8 @@
         let userMarker = null;
         let userLocation = null;
         let watchId = null;
-        let manualFlyInProgress = false;   // flag to prevent auto-fit during manual fly
+        let manualFlyInProgress = false;
+        let distanceFetchQueue = []; // for aborting? not needed but prevent overlapping
 
         // DOM elements
         const spotContainer = document.getElementById('spotList');
@@ -436,7 +445,8 @@
             }
         }
 
-        function distanceMeters(lat1, lng1, lat2, lng2) {
+        // Straight-line distance for fallback
+        function straightLineMeters(lat1, lng1, lat2, lng2) {
             const R = 6371000;
             const dLat = (lat2 - lat1) * Math.PI / 180;
             const dLng = (lng2 - lng1) * Math.PI / 180;
@@ -444,27 +454,101 @@
             return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
         }
 
-        function formatDist(m) {
-            if (m === null) return '—';
-            return m < 1000 ? Math.round(m) + ' m' : (m/1000).toFixed(1) + ' km';
+        function formatDistance(meters) {
+            if (meters === null || meters === undefined) return '—';
+            return meters < 1000 ? Math.round(meters) + ' m' : (meters/1000).toFixed(1) + ' km';
         }
 
-        function getSortedLocations() {
-            if (!userLocation) return [...MASTER_LOCATIONS];
-            return [...MASTER_LOCATIONS].map(loc => ({
-                ...loc,
-                distance: distanceMeters(userLocation.lat, userLocation.lng, loc.lat, loc.lng)
-            })).sort((a, b) => a.distance - b.distance);
+        // Fetch real driving distance from OSRM
+        async function fetchDrivingDistance(originLat, originLng, destLat, destLng) {
+            const url = `https://router.project-osrm.org/route/v1/driving/${originLng},${originLat};${destLng},${destLat}?overview=false`;
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+                if (data.code === 'Ok' && data.routes && data.routes.length > 0) {
+                    return data.routes[0].distance; // meters
+                } else {
+                    throw new Error('No route');
+                }
+            } catch (err) {
+                console.warn('OSRM fetch failed, using straight-line', err);
+                return null;
+            }
         }
 
-        function renderSidebar() {
-            const sorted = getSortedLocations();
+        // Update a specific distance display with loading and then final value
+        async function updateDistanceForLocation(locId, originLat, originLng, destLat, destLng) {
+            const span = document.getElementById(`dist-${locId}`);
+            if (!span) return;
+            // Set loading state
+            span.innerHTML = `🔄 road...`;
+            span.classList.add('distance-loading');
+            const drivingMeters = await fetchDrivingDistance(originLat, originLng, destLat, destLng);
+            span.classList.remove('distance-loading');
+            if (drivingMeters !== null) {
+                span.innerHTML = `🚗 ${formatDistance(drivingMeters)}`;
+            } else {
+                // fallback to straight line
+                const straight = straightLineMeters(originLat, originLng, destLat, destLng);
+                span.innerHTML = `⚠️ ${formatDistance(straight)} (straight)`;
+            }
+        }
+
+        // After location is known, refresh all distances (real road)
+        async function refreshAllRoadDistances() {
+            if (!userLocation) return;
+            // For each location, fetch sequentially to avoid overwhelming API (5 calls is fine)
+            for (const loc of MASTER_LOCATIONS) {
+                await updateDistanceForLocation(loc.id, userLocation.lat, userLocation.lng, loc.lat, loc.lng);
+            }
+            // After distances updated, re-sort sidebar based on new values? Sorting currently uses straight-line (we have distances stored in loc objects)
+            // Since we now have road distances but not stored in a global variable, we need to re-sort using the actual driving distances.
+            // We'll fetch all distances, then sort and re-render sidebar.
+            // However, to keep it clean, we will fetch distances, store them, then re-render sidebar with updated distances and sort by road distance.
+            // Simpler: after all distances fetched, we can just re-render sidebar using a new function that uses fetched distances.
+            await reorderSidebarByRoadDistance();
+        }
+
+        // Helper: get road distance for a location (async, but we'll cache in a Map)
+        let roadDistanceCache = new Map();
+        async function getRoadDistance(loc) {
+            if (!userLocation) return null;
+            const key = `${loc.id}_${userLocation.lat.toFixed(4)}_${userLocation.lng.toFixed(4)}`;
+            if (roadDistanceCache.has(key)) return roadDistanceCache.get(key);
+            const dist = await fetchDrivingDistance(userLocation.lat, userLocation.lng, loc.lat, loc.lng);
+            if (dist !== null) roadDistanceCache.set(key, dist);
+            return dist;
+        }
+
+        async function reorderSidebarByRoadDistance() {
+            if (!userLocation) {
+                renderSidebar(); // default unsorted
+                return;
+            }
+            // Fetch all road distances concurrently
+            const promises = MASTER_LOCATIONS.map(async (loc) => {
+                const roadDist = await getRoadDistance(loc);
+                return { ...loc, roadDistance: roadDist };
+            });
+            const locsWithDist = await Promise.all(promises);
+            // Sort by road distance (if null, push to bottom)
+            locsWithDist.sort((a, b) => {
+                if (a.roadDistance === null && b.roadDistance === null) return 0;
+                if (a.roadDistance === null) return 1;
+                if (b.roadDistance === null) return -1;
+                return a.roadDistance - b.roadDistance;
+            });
+            // Render sidebar with these distances
+            renderSidebarWithDistances(locsWithDist);
+        }
+
+        function renderSidebarWithDistances(locsWithDist) {
             spotContainer.innerHTML = '';
-            sorted.forEach((loc, idx) => {
+            locsWithDist.forEach((loc, idx) => {
                 const card = document.createElement('div');
                 card.className = 'monster-card';
                 if (idx === 0 && userLocation) card.classList.add('nearest');
-                const distText = userLocation ? formatDist(loc.distance) : '—';
+                const distanceText = (loc.roadDistance !== null && userLocation) ? `🚗 ${formatDistance(loc.roadDistance)}` : (userLocation ? '🔄 road...' : '📍 enable location');
                 card.innerHTML = `
                     <div class="spot-name">
                         🧃 ${escapeHtml(loc.name)} <span>${escapeHtml(loc.tag)}</span>
@@ -476,7 +560,55 @@
                             <button class="btn-take-me" data-id="${loc.id}">📍 Take me</button>
                             <button class="btn-route" data-id="${loc.id}">🧭 Route (Google Maps)</button>
                         </div>
-                        <div class="distance-info" id="dist-${loc.id}">📍 ${userLocation ? formatDist(loc.distance) + ' away' : 'enable location'}</div>
+                        <div class="distance-info" id="dist-${loc.id}">${distanceText}</div>
+                    </div>
+                `;
+                spotContainer.appendChild(card);
+            });
+            // Re-attach event listeners
+            document.querySelectorAll('.btn-take-me').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const id = btn.getAttribute('data-id');
+                    const loc = MASTER_LOCATIONS.find(l => l.id === id);
+                    if (loc) flyToLocation(loc);
+                });
+            });
+            document.querySelectorAll('.btn-route').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const id = btn.getAttribute('data-id');
+                    const loc = MASTER_LOCATIONS.find(l => l.id === id);
+                    if (loc) openGoogleMapsRoute(loc.lat, loc.lng, loc.name);
+                });
+            });
+            // If we have distances and userLocation, also update the cache to avoid duplicate fetches
+        }
+
+        // Fallback simple render without distances
+        function renderSidebar() {
+            const sorted = userLocation ? [...MASTER_LOCATIONS].map(loc => ({
+                ...loc,
+                distance: straightLineMeters(userLocation.lat, userLocation.lng, loc.lat, loc.lng)
+            })).sort((a,b) => a.distance - b.distance) : MASTER_LOCATIONS;
+            spotContainer.innerHTML = '';
+            sorted.forEach((loc, idx) => {
+                const card = document.createElement('div');
+                card.className = 'monster-card';
+                if (idx === 0 && userLocation) card.classList.add('nearest');
+                const distText = userLocation ? `📍 ${formatDistance(loc.distance)} (straight)` : '📍 enable location';
+                card.innerHTML = `
+                    <div class="spot-name">
+                        🧃 ${escapeHtml(loc.name)} <span>${escapeHtml(loc.tag)}</span>
+                    </div>
+                    <div class="address-detail">📍 ${escapeHtml(loc.address)}</div>
+                    <div class="coords-text">🧭 ${loc.coordsDMS}</div>
+                    <div class="action-row">
+                        <div class="btn-group">
+                            <button class="btn-take-me" data-id="${loc.id}">📍 Take me</button>
+                            <button class="btn-route" data-id="${loc.id}">🧭 Route (Google Maps)</button>
+                        </div>
+                        <div class="distance-info" id="dist-${loc.id}">${distText}</div>
                     </div>
                 `;
                 spotContainer.appendChild(card);
@@ -549,7 +681,6 @@
             }
         }
 
-        // Fixed flyToLocation: prevents auto-fit interference
         function flyToLocation(loc) {
             if (!map) return;
             manualFlyInProgress = true;
@@ -564,27 +695,34 @@
                         setTimeout(() => { if (el) el.style.transform = ''; }, 400);
                     }
                 }
-                // Wait a bit longer before clearing the flag to avoid any late fitBounds
                 setTimeout(() => { manualFlyInProgress = false; }, 1500);
             }, 300);
             showToast(`🧃 Flying to ${loc.name}`, 2000);
         }
 
-        // Refresh UI after location update – but skip if manual fly is active
-        function refreshUIAfterLocation() {
+        async function refreshUIAfterLocation() {
             renderUserMarker();
-            renderSidebar();
-            updateStatusUI(true);
-            if (!manualFlyInProgress) {
-                const allPoints = MASTER_LOCATIONS.map(l => [l.lat, l.lng]);
-                if (userLocation) allPoints.push([userLocation.lat, userLocation.lng]);
-                map.fitBounds(L.latLngBounds(allPoints), { padding: [60, 60] });
-            }
             if (userLocation) {
-                const sorted = getSortedLocations();
-                if (sorted.length) {
-                    showToast(`📍 Nearest spot: ${sorted[0].name} (${formatDist(sorted[0].distance)} away)`, 4000);
+                roadDistanceCache.clear(); // clear cache because origin changed
+                await reorderSidebarByRoadDistance(); // fetches road distances and sorts
+                updateStatusUI(true);
+                if (!manualFlyInProgress) {
+                    const allPoints = MASTER_LOCATIONS.map(l => [l.lat, l.lng]);
+                    allPoints.push([userLocation.lat, userLocation.lng]);
+                    map.fitBounds(L.latLngBounds(allPoints), { padding: [60, 60] });
                 }
+                // Show nearest by road distance (after sorting)
+                const nearestId = document.querySelector('.monster-card.nearest .btn-take-me')?.getAttribute('data-id');
+                if (nearestId) {
+                    const nearestLoc = MASTER_LOCATIONS.find(l => l.id === nearestId);
+                    if (nearestLoc) {
+                        const roadDist = await getRoadDistance(nearestLoc);
+                        if (roadDist) showToast(`📍 Nearest: ${nearestLoc.name} (${formatDistance(roadDist)})`, 4000);
+                    }
+                }
+            } else {
+                renderSidebar();
+                updateStatusUI(false);
             }
         }
 
@@ -601,9 +739,9 @@
                     refreshUIAfterLocation();
                     if (watchId) navigator.geolocation.clearWatch(watchId);
                     watchId = navigator.geolocation.watchPosition(
-                        (newPos) => {
+                        async (newPos) => {
                             userLocation = { lat: newPos.coords.latitude, lng: newPos.coords.longitude };
-                            refreshUIAfterLocation();
+                            await refreshUIAfterLocation();
                         },
                         err => console.warn("Watch error:", err),
                         { enableHighAccuracy: true, maximumAge: 10000 }
@@ -670,8 +808,12 @@
             toastDiv.addEventListener('click', (e) => {
                 if (e.target === closeToast) return;
                 if (userLocation) {
-                    const sorted = getSortedLocations();
-                    if (sorted.length) flyToLocation(sorted[0]);
+                    const nearestCard = document.querySelector('.monster-card.nearest');
+                    if (nearestCard) {
+                        const id = nearestCard.querySelector('.btn-take-me')?.getAttribute('data-id');
+                        const loc = MASTER_LOCATIONS.find(l => l.id === id);
+                        if (loc) flyToLocation(loc);
+                    }
                 } else {
                     flyToLocation(MASTER_LOCATIONS[0]);
                 }
@@ -683,18 +825,19 @@
                 if (e.key === 'Escape') modal.classList.remove('active');
                 if (e.ctrlKey && e.shiftKey && e.key === 'L') { e.preventDefault(); getLocation(); }
                 if (e.ctrlKey && e.shiftKey && e.key === 'B') { e.preventDefault(); sidebar.classList.toggle('collapsed'); }
-                if (e.ctrlKey && e.shiftKey && e.key === '1') { e.preventDefault(); flyToLocation(MASTER_LOCATIONS[0]); }
-                if (e.ctrlKey && e.shiftKey && e.key === '2') { e.preventDefault(); flyToLocation(MASTER_LOCATIONS[1]); }
-                if (e.ctrlKey && e.shiftKey && e.key === '3') { e.preventDefault(); flyToLocation(MASTER_LOCATIONS[2]); }
-                if (e.ctrlKey && e.shiftKey && e.key === '4') { e.preventDefault(); flyToLocation(MASTER_LOCATIONS[3]); }
-                if (e.ctrlKey && e.shiftKey && e.key === '5') { e.preventDefault(); flyToLocation(MASTER_LOCATIONS[4]); }
+                for (let i = 1; i <= 5; i++) {
+                    if (e.ctrlKey && e.shiftKey && e.key === String(i)) {
+                        e.preventDefault();
+                        flyToLocation(MASTER_LOCATIONS[i-1]);
+                    }
+                }
             });
         }
 
         initMap();
         bindEvents();
-        setTimeout(() => showToast("🧃 Five spots • Click 'Take me' for smooth fly-in (no zoom out)", 5000), 1000);
-        console.log("✅ Fixed: 'Take me' now stays at location without zooming out.");
+        setTimeout(() => showToast("🧃 Real road distances (OSRM) – accurate driving km", 5000), 1000);
+        console.log("✅ Road-accurate distances via OSRM routing.");
     })();
 </script>
 </body>
