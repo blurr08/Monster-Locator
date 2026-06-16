@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Monster Energy • Dhule (Shop Info)</title>
+    <title>Monster Energy • Dhule</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         * {
@@ -475,7 +475,7 @@
             <div class="tagline">⚡ Dhule • Maharashtra</div>
         </div>
     </div>
-    <div class="city-badge">📍 5 spots • Real road distance</div>
+    <div class="city-badge">📍 5 spots •</div>
     <div class="spot-container" id="spotList"></div>
     <div class="sidebar-footer">
         <button class="side-btn" id="refreshBtn">🔄 Refresh</button>
@@ -488,7 +488,7 @@
     <div class="info-popup" id="infoPopup">
         <div class="info-popup-header">
             <div class="info-popup-title">
-                <span class="emoji">🧃</span>
+                <span class="emoji">𓆩✧𓆪</span>
                 <span id="popupShopName">Shop Name</span>
                 <span class="badge-tag" id="popupShopTag">MAIN</span>
             </div>
@@ -500,8 +500,8 @@
     </div>
 </div>
 
-<div id="globalToast" class="toast-notify"><span>🧃</span><span id="toastMsg"></span><span class="toast-close" id="closeToastBtn">✕</span></div>
-<div id="addModal" class="modal-overlay"><div class="modal-card"><h3>🧃 Monster Energy Dhule</h3><p>Tap the ℹ️ Info button on any shop for details.</p><button id="modalCloseBtn" style="margin-top:15px;padding:8px 20px;">OK</button></div></div>
+<div id="globalToast" class="toast-notify"><span>𓆩✧𓆪</span><span id="toastMsg"></span><span class="toast-close" id="closeToastBtn">✕</span></div>
+<div id="addModal" class="modal-overlay"><div class="modal-card"><h3>𓆩Monster Energy Dhule𓆪</h3><p>Tap the ℹ️ Info button on any shop for details.</p><button id="modalCloseBtn" style="margin-top:15px;padding:8px 20px;">OK</button></div></div>
 
 <button id="fab-toggle-sidebar" class="fab">🗂️</button>
 <button id="fab-locate" class="fab">📍</button>
@@ -513,30 +513,30 @@
         // You can replace the placeholder info with your own details!
         const SHOP_INFO = {
             spot_main: {
-                name: "Monster Energy Hub",
+                name: "Singhavis Sweet",
                 tag: "MAIN",
                 emoji: "🏪",
                 description: "Your go-to spot for Monster Energy drinks in Dhule city center. Wide variety of flavors and cold stock available.",
                 address: "Near Dhule City Center, Dhule, Maharashtra",
-                phone: "+91 98765 43210",
+                phone: "09096001600",
                 hours: [
-                    { day: "Monday - Saturday", time: "9:00 AM – 10:00 PM" },
-                    { day: "Sunday", time: "10:00 AM – 8:00 PM" }
+                    { day: "Monday - Saturday", time: "9:00 AM –9:30PM" },
+                    { }
                 ],
                 features: ["🥤 All Monster flavors", "❄️ Chilled drinks", "💳 Card accepted", "🚗 Parking available"]
             },
             spot_square: {
-                name: "Monster Energy Square",
+                name: "Amul Enterprises",
                 tag: "NEW",
-                emoji: "🏛️",
+                emoji: "🏪",
                 description: "Located at Tower Chowk, this is a popular spot for students and office workers. Grab a Monster and stay energized!",
                 address: "Tower Chowk, Dhule, Maharashtra",
                 phone: "+91 98765 43211",
                 hours: [
-                    { day: "Monday - Friday", time: "8:00 AM – 9:00 PM" },
-                    { day: "Saturday - Sunday", time: "9:00 AM – 8:00 PM" }
+                    { day: "Monday - Friday", time: "9:00 AM – 11:00pm" },
+                    { }
                 ],
-                features: ["🥤 Monster & other energy drinks", "🍫 Snacks", "💰 Cash & UPI", "📶 Free Wi-Fi"]
+                features: ["🥤 Monster & other energy drinks", "🍫 Snacks", "💰 Cash & UPI"]
             },
             spot_third: {
                 name: "Monster Energy Point",
