@@ -570,6 +570,41 @@
         #bottomBubble .btn-route { background: rgba(40,167,69,0.85); }
         #bottomBubble .btn-info { background: rgba(255,193,7,0.85); }
 
+        /* ---- PULSE WAVE ANIMATION ---- */
+        .pulse-wave-container {
+            position: fixed;
+            pointer-events: none;
+            z-index: 10;
+            width: 100vw;
+            height: 100vh;
+            top: 0;
+            left: 0;
+            overflow: visible;
+        }
+        .pulse-ring {
+            position: absolute;
+            border: 4px solid rgba(66, 133, 244, 0.8);
+            border-radius: 50%;
+            background: rgba(66, 133, 244, 0.05);
+            box-shadow: 0 0 40px rgba(66, 133, 244, 0.2);
+            animation: pulseExpand 2.5s ease-out forwards;
+            transform: translate(-50%, -50%);
+        }
+        @keyframes pulseExpand {
+            0% {
+                width: 30px;
+                height: 30px;
+                opacity: 1;
+                border-width: 4px;
+            }
+            100% {
+                width: 2500px;
+                height: 2500px;
+                opacity: 0;
+                border-width: 1px;
+            }
+        }
+
         /* ---- RESPONSIVE ---- */
         @media (max-width: 640px) {
             #sidebar { left: 12px; right: 12px; width: auto; top: auto; bottom: 12px; transform: translateY(0); max-height: 55vh; }
@@ -592,6 +627,10 @@
             .toast-notify .toast-icon { font-size: 1.4rem; }
             .toast-notify .toast-title { font-size: 0.95rem; }
             .toast-notify .toast-sub { font-size: 0.75rem; }
+            @keyframes pulseExpand {
+                0% { width: 20px; height: 20px; }
+                100% { width: 1200px; height: 1200px; }
+            }
         }
         .monster-card.nearest {
             border: 1px solid #ffcc00;
@@ -646,6 +685,9 @@
 
 <div id="map"></div>
 <div class="location-status" id="locationStatus"><span class="dot" id="statusDot"></span><span id="statusText">Location off</span></div>
+
+<!-- PULSE WAVE CONTAINER -->
+<div class="pulse-wave-container" id="pulseContainer"></div>
 
 <aside id="sidebar">
     <div class="sidebar-header">
@@ -784,7 +826,6 @@
         let userInteracting = false;
         let roadDistanceCache = new Map();
         let dropMarker = null;
-        let pulseCircle = null;
         let isBubbleDismissed = false;
         let isFirstLocation = true;
 
@@ -819,6 +860,7 @@
         const bubbleRoute = document.getElementById('bubbleRoute');
         const bubbleInfo = document.getElementById('bubbleInfo');
         const bubbleClose = document.getElementById('bubbleClose');
+        const pulseContainer = document.getElementById('pulseContainer');
 
         let toastTimer = null;
         
@@ -883,6 +925,30 @@
                 if (d < minDist) { minDist = d; nearest = loc; }
             }
             return nearest;
+        }
+
+        // ---- PULSE WAVE FUNCTION (CSS animated) ----
+        function createPulseWave(lat, lng) {
+            // Remove any existing pulse rings
+            const existingRings = pulseContainer.querySelectorAll('.pulse-ring');
+            existingRings.forEach(el => el.remove());
+
+            // Convert lat/lng to pixel position on screen
+            const point = map.latLngToContainerPoint([lat, lng]);
+            const x = point.x;
+            const y = point.y;
+
+            // Create the ring element
+            const ring = document.createElement('div');
+            ring.className = 'pulse-ring';
+            ring.style.left = x + 'px';
+            ring.style.top = y + 'px';
+            pulseContainer.appendChild(ring);
+
+            // Auto-remove after animation completes
+            setTimeout(() => {
+                if (ring.parentNode) ring.remove();
+            }, 2800);
         }
 
         // ---- SHOP INFO POPUP ----
@@ -1121,11 +1187,10 @@
             map.fitBounds(L.latLngBounds(allPoints), { padding: [60, 60] });
         }
 
-        // ---- DROP & PULSE WAVE ----
+        // ---- DROP & PULSE ----
         function animateDropAndPulse(lat, lng, shopName) {
-            // Remove previous
+            // Remove previous drop marker
             if (dropMarker) { map.removeLayer(dropMarker); dropMarker = null; }
-            if (pulseCircle) { map.removeLayer(pulseCircle); pulseCircle = null; }
 
             // Drop marker with bounce animation
             const icon = createDropIcon();
@@ -1139,49 +1204,10 @@
                 if (dropMarker) dropMarker.bindPopup(`<b>📍 ${shopName}</b>`).openPopup();
             }, 600);
 
-            // ===== PULSE WAVE - visible expanding circle =====
-            const startRadius = 15;
-            const maxRadius = Math.max(
-                map.getBounds().getEast() - map.getBounds().getWest(),
-                map.getBounds().getNorth() - map.getBounds().getSouth()
-            ) * 1.2;
-            
-            // Create initial circle
-            pulseCircle = L.circle([lat, lng], {
-                radius: startRadius,
-                color: '#4285f4',
-                fillColor: '#4285f4',
-                fillOpacity: 0.5,
-                weight: 3,
-                opacity: 0.9
-            }).addTo(map);
-
-            // Animate expansion
-            let currentRadius = startRadius;
-            const steps = 70;
-            const stepSize = (maxRadius - startRadius) / steps;
-            let step = 0;
-            
-            const pulseInterval = setInterval(() => {
-                step++;
-                currentRadius += stepSize * 1.1;
-                if (pulseCircle) {
-                    pulseCircle.setRadius(currentRadius);
-                    const progress = Math.min(1, step / steps);
-                    const opacity = Math.max(0, 0.9 * (1 - progress * 1.05));
-                    pulseCircle.setStyle({ 
-                        fillOpacity: opacity * 0.5, 
-                        opacity: opacity * 0.9 
-                    });
-                }
-                if (step >= steps || currentRadius >= maxRadius) {
-                    clearInterval(pulseInterval);
-                    if (pulseCircle) { 
-                        map.removeLayer(pulseCircle); 
-                        pulseCircle = null; 
-                    }
-                }
-            }, 25);
+            // === PULSE WAVE - using CSS animation for smooth effect ===
+            setTimeout(() => {
+                createPulseWave(lat, lng);
+            }, 300);
 
             // Fly to location
             map.flyTo([lat, lng], 15, { duration: 1.0 });
@@ -1240,7 +1266,7 @@
                     autoFitBounds();
                 }
 
-                // Only show bubble and drop on initial location or if user wants
+                // Only show bubble and drop on initial location
                 if (isFirstLocation || shouldFitBounds) {
                     const nearest = getNearestShop();
                     if (nearest) {
@@ -1391,8 +1417,8 @@
         setTimeout(() => {
             showToast('🦖 Monster Energy', 'Tap "Get My Location" to find the nearest shop', '🧃', 5000);
         }, 1000);
-        console.log("✅ All fixed: Top toasts, bubble stays closed, no map shake, pulse wave visible.");
+        console.log("✅ All fixed: Top toasts, bubble stays closed, no map shake, pulse wave NOW VISIBLE!");
     })();
 </script>
 </body>
-    </html>
+</html>
