@@ -265,29 +265,29 @@
         #fab-locate { bottom: 90px; }
         #fab-toggle-sidebar { bottom: 150px; }
         
-        /* ---- IMPROVED TOAST NOTIFICATION ---- */
+        /* ===== TOP TOAST ===== */
         .toast-notify {
             position: fixed;
             z-index: 200;
-            bottom: 100px;
+            top: 30px;
             left: 50%;
-            transform: translateX(-50%) translateY(150px);
-            background: rgba(0, 0, 0, 0.85);
+            transform: translateX(-50%) translateY(-150px);
+            background: rgba(0, 0, 0, 0.92);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 215, 0, 0.3);
+            border: 1px solid rgba(255, 215, 0, 0.35);
             border-radius: 20px;
-            padding: 18px 32px;
+            padding: 18px 28px;
             display: flex;
             align-items: center;
             gap: 16px;
             font-weight: 600;
             font-size: 1rem;
-            transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.4s ease;
+            transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.5s ease;
             white-space: nowrap;
             color: white;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.7);
-            max-width: 90%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+            max-width: 92%;
             pointer-events: auto;
             opacity: 0;
         }
@@ -353,7 +353,7 @@
         }
         .dot.active { background: #4caf50; }
 
-        /* ---- SHOP INFO POPUP (MODAL) ---- */
+        /* ---- SHOP INFO POPUP ---- */
         .info-overlay {
             position: fixed;
             inset: 0;
@@ -409,9 +409,7 @@
             align-items: center;
             gap: 12px;
         }
-        .info-popup-title .emoji {
-            font-size: 2rem;
-        }
+        .info-popup-title .emoji { font-size: 2rem; }
         .info-close-btn {
             background: rgba(255,255,255,0.1);
             border: 1px solid rgba(255,255,255,0.2);
@@ -436,52 +434,46 @@
             line-height: 1.7;
             color: #ddd;
         }
-        .info-body .field {
-            margin-bottom: 14px;
-        }
+        .info-body .field { margin-bottom:14px; }
         .info-body .field-label {
-            font-weight: 700;
-            color: #ffd966;
-            display: inline-block;
-            min-width: 90px;
+            font-weight:700;
+            color:#ffd966;
+            display:inline-block;
+            min-width:90px;
         }
-        .info-body .field-value {
-            color: #eee;
-        }
+        .info-body .field-value { color:#eee; }
         .info-body .divider {
-            border: none;
-            border-top: 1px solid rgba(255,255,255,0.1);
-            margin: 18px 0;
+            border:none;
+            border-top:1px solid rgba(255,255,255,0.1);
+            margin:18px 0;
         }
         .info-body .shop-hours {
-            display: flex;
-            justify-content: space-between;
-            padding: 4px 0;
-            border-bottom: 0.5px solid rgba(255,255,255,0.05);
+            display:flex;
+            justify-content:space-between;
+            padding:4px 0;
+            border-bottom:0.5px solid rgba(255,255,255,0.05);
         }
-        .info-body .shop-hours:last-child {
-            border-bottom: none;
-        }
+        .info-body .shop-hours:last-child { border-bottom:none; }
         .info-popup .badge-tag {
-            display: inline-block;
-            background: rgba(255, 215, 0, 0.2);
-            color: #ffd966;
-            font-size: 0.7rem;
-            padding: 2px 12px;
-            border-radius: 30px;
-            border: 0.5px solid rgba(255,215,0,0.3);
-            margin-left: 8px;
+            display:inline-block;
+            background:rgba(255,215,0,0.2);
+            color:#ffd966;
+            font-size:0.7rem;
+            padding:2px 12px;
+            border-radius:30px;
+            border:0.5px solid rgba(255,215,0,0.3);
+            margin-left:8px;
         }
-        .info-popup::-webkit-scrollbar { width: 4px; }
-        .info-popup::-webkit-scrollbar-track { background: transparent; }
-        .info-popup::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.3); border-radius: 10px; }
+        .info-popup::-webkit-scrollbar { width:4px; }
+        .info-popup::-webkit-scrollbar-track { background:transparent; }
+        .info-popup::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.3); border-radius:10px; }
 
         /* ---- BOTTOM BUBBLE ---- */
         #bottomBubble {
             position: fixed;
             bottom: 24px;
             left: 50%;
-            transform: translateX(-50%) translateY(120px);
+            transform: translateX(-50%) translateY(150px);
             z-index: 30;
             width: 92%;
             max-width: 520px;
@@ -551,9 +543,6 @@
             padding:10px 16px;
             font-size:0.75rem;
             min-width:80px;
-            background: rgba(255,255,255,0.1);
-            backdrop-filter: blur(4px);
-            border: 1px solid rgba(255,255,255,0.15);
         }
         .bubble-close {
             position:absolute;
@@ -599,7 +588,7 @@
             .bubble-actions .btn-route,
             .bubble-actions .btn-info { font-size: 0.7rem; padding: 8px 12px; min-width: 60px; }
             .bubble-title { font-size: 1rem; }
-            .toast-notify { padding: 14px 20px; font-size: 0.85rem; bottom: 80px; }
+            .toast-notify { padding: 14px 20px; font-size: 0.85rem; top: 15px; }
             .toast-notify .toast-icon { font-size: 1.4rem; }
             .toast-notify .toast-title { font-size: 0.95rem; }
             .toast-notify .toast-sub { font-size: 0.75rem; }
@@ -618,10 +607,10 @@
             50% { opacity: 1; }
         }
         @keyframes dropBounce {
-            0% { transform: translateY(-300px) scale(0.5); opacity:0; }
-            60% { transform: translateY(20px) scale(1.1); opacity:1; }
+            0% { transform: translateY(-300px) scale(0.5) rotate(-10deg); opacity:0; }
+            60% { transform: translateY(20px) scale(1.15) rotate(5deg); opacity:1; }
             80% { transform: translateY(-8px) scale(0.95); }
-            100% { transform: translateY(0) scale(1); opacity:1; }
+            100% { transform: translateY(0) scale(1) rotate(0deg); opacity:1; }
         }
         .marker-drop {
             animation: dropBounce 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
@@ -706,7 +695,7 @@
     </div>
 </div>
 
-<!-- IMPROVED TOAST -->
+<!-- TOP TOAST -->
 <div id="globalToast" class="toast-notify">
     <span class="toast-icon" id="toastIcon">🧃</span>
     <div class="toast-content">
@@ -796,6 +785,8 @@
         let roadDistanceCache = new Map();
         let dropMarker = null;
         let pulseCircle = null;
+        let isBubbleDismissed = false;
+        let isFirstLocation = true;
 
         // DOM elements
         const spotContainer = document.getElementById('spotList');
@@ -1130,13 +1121,13 @@
             map.fitBounds(L.latLngBounds(allPoints), { padding: [60, 60] });
         }
 
-        // ---- DROP & PULSE ----
+        // ---- DROP & PULSE WAVE ----
         function animateDropAndPulse(lat, lng, shopName) {
-            // Remove any previous drop marker or pulse
+            // Remove previous
             if (dropMarker) { map.removeLayer(dropMarker); dropMarker = null; }
             if (pulseCircle) { map.removeLayer(pulseCircle); pulseCircle = null; }
 
-            // Drop marker with bounce
+            // Drop marker with bounce animation
             const icon = createDropIcon();
             dropMarker = L.marker([lat, lng], { icon, zIndexOffset: 900 }).addTo(map);
             const el = dropMarker.getElement();
@@ -1148,42 +1139,57 @@
                 if (dropMarker) dropMarker.bindPopup(`<b>📍 ${shopName}</b>`).openPopup();
             }, 600);
 
-            // Pulse wave
-            const radius = 20;
+            // ===== PULSE WAVE - visible expanding circle =====
+            const startRadius = 15;
+            const maxRadius = Math.max(
+                map.getBounds().getEast() - map.getBounds().getWest(),
+                map.getBounds().getNorth() - map.getBounds().getSouth()
+            ) * 1.2;
+            
+            // Create initial circle
             pulseCircle = L.circle([lat, lng], {
-                radius: radius,
+                radius: startRadius,
                 color: '#4285f4',
                 fillColor: '#4285f4',
-                fillOpacity: 0.3,
+                fillOpacity: 0.5,
                 weight: 3,
-                opacity: 0.8
+                opacity: 0.9
             }).addTo(map);
 
-            let size = radius;
-            const bounds = map.getBounds();
-            const maxSize = Math.max(bounds.getEast() - bounds.getWest(), bounds.getNorth() - bounds.getSouth()) * 1.5;
-            const step = (maxSize - radius) / 60;
-            let frame = 0;
+            // Animate expansion
+            let currentRadius = startRadius;
+            const steps = 70;
+            const stepSize = (maxRadius - startRadius) / steps;
+            let step = 0;
+            
             const pulseInterval = setInterval(() => {
-                frame++;
-                size += step * 1.3;
+                step++;
+                currentRadius += stepSize * 1.1;
                 if (pulseCircle) {
-                    pulseCircle.setRadius(size);
-                    const opacity = Math.max(0, 0.8 - (size / maxSize) * 0.9);
-                    pulseCircle.setStyle({ fillOpacity: opacity * 0.4, opacity: opacity * 0.9 });
+                    pulseCircle.setRadius(currentRadius);
+                    const progress = Math.min(1, step / steps);
+                    const opacity = Math.max(0, 0.9 * (1 - progress * 1.05));
+                    pulseCircle.setStyle({ 
+                        fillOpacity: opacity * 0.5, 
+                        opacity: opacity * 0.9 
+                    });
                 }
-                if (size >= maxSize || frame > 80) {
+                if (step >= steps || currentRadius >= maxRadius) {
                     clearInterval(pulseInterval);
-                    if (pulseCircle) { map.removeLayer(pulseCircle); pulseCircle = null; }
+                    if (pulseCircle) { 
+                        map.removeLayer(pulseCircle); 
+                        pulseCircle = null; 
+                    }
                 }
-            }, 30);
+            }, 25);
 
-            // Fly to the location
+            // Fly to location
             map.flyTo([lat, lng], 15, { duration: 1.0 });
         }
 
         // ---- BOTTOM BUBBLE ----
         function showBottomBubble(shop) {
+            if (isBubbleDismissed) return;
             if (!shop) return;
             const info = SHOP_INFO[shop.id];
             bubbleIcon.textContent = info?.emoji || '🧃';
@@ -1198,6 +1204,11 @@
 
         function hideBottomBubble() {
             bottomBubble.classList.remove('show');
+            isBubbleDismissed = true;
+        }
+
+        function resetBubbleDismissal() {
+            isBubbleDismissed = false;
         }
 
         // Bubble button handlers
@@ -1218,26 +1229,29 @@
         bubbleClose.addEventListener('click', hideBottomBubble);
 
         // ---- REFRESH UI AFTER LOCATION ----
-        async function refreshUIAfterLocation(shouldFitBounds = true) {
+        async function refreshUIAfterLocation(shouldFitBounds = false) {
             renderUserMarker();
             if (userLocation) {
                 roadDistanceCache.clear();
                 await renderSidebarWithRoadDistances();
                 updateStatusUI(true);
-                if (shouldFitBounds) autoFitBounds();
+                
+                if (shouldFitBounds) {
+                    autoFitBounds();
+                }
 
-                // Get nearest shop and trigger bubble + drop
-                const nearest = getNearestShop();
-                if (nearest) {
-                    // Collapse sidebar
-                    sidebar.classList.add('collapsed');
-                    // Show bottom bubble
-                    showBottomBubble(nearest);
-                    // Animate drop + pulse
-                    animateDropAndPulse(nearest.lat, nearest.lng, nearest.name);
-                    // Toast with distance
-                    const dist = distanceMeters(userLocation.lat, userLocation.lng, nearest.lat, nearest.lng);
-                    showToast('📍 Nearest Shop Found', `${nearest.name} — ${formatDistance(dist)} away`, '🧃', 4000);
+                // Only show bubble and drop on initial location or if user wants
+                if (isFirstLocation || shouldFitBounds) {
+                    const nearest = getNearestShop();
+                    if (nearest) {
+                        sidebar.classList.add('collapsed');
+                        resetBubbleDismissal();
+                        showBottomBubble(nearest);
+                        animateDropAndPulse(nearest.lat, nearest.lng, nearest.name);
+                        const dist = distanceMeters(userLocation.lat, userLocation.lng, nearest.lat, nearest.lng);
+                        showToast('📍 Nearest Shop Found', `${nearest.name} — ${formatDistance(dist)} away`, '🧃', 4000);
+                    }
+                    isFirstLocation = false;
                 }
             } else {
                 renderSidebarFallback();
@@ -1262,7 +1276,10 @@
                     watchId = navigator.geolocation.watchPosition(
                         async (newPos) => {
                             userLocation = { lat: newPos.coords.latitude, lng: newPos.coords.longitude };
-                            await refreshUIAfterLocation(false);
+                            // Just update markers and distances, don't refit or re-drop
+                            renderUserMarker();
+                            await renderSidebarWithRoadDistances();
+                            updateStatusUI(true);
                         },
                         err => console.warn("Watch error:", err),
                         { enableHighAccuracy: true, maximumAge: 10000 }
@@ -1374,8 +1391,8 @@
         setTimeout(() => {
             showToast('🦖 Monster Energy', 'Tap "Get My Location" to find the nearest shop', '🧃', 5000);
         }, 1000);
-        console.log("✅ Fixed: Blue dot now drops on correct shop location. Improved toast notifications.");
+        console.log("✅ All fixed: Top toasts, bubble stays closed, no map shake, pulse wave visible.");
     })();
 </script>
 </body>
-</html>
+    </html>
