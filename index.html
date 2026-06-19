@@ -697,7 +697,7 @@
             <div class="tagline">⚡ Dhule • Maharashtra</div>
         </div>
     </div>
-    <div class="city-badge">📍 5 spots •</div>
+    <div class="city-badge">📍 6 spots •</div>
     <div class="spot-container" id="spotList"></div>
     <div class="sidebar-footer">
         <button class="side-btn" id="refreshBtn">🔄 Refresh</button>
@@ -755,7 +755,7 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
     (function() {
-        // ----- SHOP DATA -----
+        // ----- SHOP DATA (6 locations) -----
         const SHOP_INFO = {
             spot_main: {
                 name: "Singhavis Sweet",
@@ -806,6 +806,16 @@
                 phone: "+91 98765 43214",
                 hours: [{ day: "Monday - Sunday", time: "8:00 AM – 10:00 PM" }],
                 features: ["🥤 Chilled Monster", "☕ Coffee & tea", "Some really good sodas", "Snacks available "]
+            },
+            spot_sixth: {
+                name: "Patanjali Store",
+                tag: "NEW",
+                emoji: "🌿",
+                description: "Patanjali Store offering Monster Energy drinks alongside Ayurvedic products. A unique combination for health-conscious energy seekers.",
+                address: "North Dhule Area, Dhule, Maharashtra",
+                phone: "Number not provided",
+                hours: [{ day: "Monday - Sunday", time: "9:00 AM – 9:00 PM" }],
+                features: ["🥤 Monster Energy", "🌿 Ayurvedic products", "💳 Cash & UPI", "🅿️ Parking available"]
             }
         };
 
@@ -814,7 +824,9 @@
             { id: "spot_square", name: "Amul Enterprises ", lat: 20.911280555555555, lng: 74.75695, address: "Tower Chowk, Dhule", coordsDMS: "20°54'40.61\"N 74°45'25.02\"E", tag: "NEW" },
             { id: "spot_third", name: "Amul SSD", lat: 20.90357777777778, lng: 74.7496, address: "Near Dhule Bus Stand", coordsDMS: "20°54'12.88\"N 74°44'58.56\"E", tag: "THIRD" },
             { id: "spot_fourth", name: "Just Chill", lat: 20.904041666666666, lng: 74.75639444444444, address: "Near Dhule Market", coordsDMS: "20°54'14.55\"N 74°45'23.02\"E", tag: "FOURTH" },
-            { id: "spot_fifth", name: "Soda Pub", lat: 20.920369444444444, lng: 74.76649166666666, address: "North Dhule Area", coordsDMS: "20°55'13.33\"N 74°45'59.37\"E", tag: "FIFTH" }
+            { id: "spot_fifth", name: "Soda Pub", lat: 20.920369444444444, lng: 74.76649166666666, address: "North Dhule Area", coordsDMS: "20°55'13.33\"N 74°45'59.37\"E", tag: "FIFTH" },
+            // NEW LOCATION: Patanjali Store
+            { id: "spot_sixth", name: "Patanjali Store", lat: 20.921294444444444, lng: 74.76615555555556, address: "North Dhule Area, Dhule", coordsDMS: "20°55'16.66\"N 74°45'58.16\"E", tag: "NEW" }
         ];
 
         let map;
@@ -927,25 +939,18 @@
             return nearest;
         }
 
-        // ---- PULSE WAVE FUNCTION (CSS animated) ----
+        // ---- PULSE WAVE ----
         function createPulseWave(lat, lng) {
-            // Remove any existing pulse rings
             const existingRings = pulseContainer.querySelectorAll('.pulse-ring');
             existingRings.forEach(el => el.remove());
 
-            // Convert lat/lng to pixel position on screen
             const point = map.latLngToContainerPoint([lat, lng]);
-            const x = point.x;
-            const y = point.y;
-
-            // Create the ring element
             const ring = document.createElement('div');
             ring.className = 'pulse-ring';
-            ring.style.left = x + 'px';
-            ring.style.top = y + 'px';
+            ring.style.left = point.x + 'px';
+            ring.style.top = point.y + 'px';
             pulseContainer.appendChild(ring);
 
-            // Auto-remove after animation completes
             setTimeout(() => {
                 if (ring.parentNode) ring.remove();
             }, 2800);
@@ -1189,10 +1194,8 @@
 
         // ---- DROP & PULSE ----
         function animateDropAndPulse(lat, lng, shopName) {
-            // Remove previous drop marker
             if (dropMarker) { map.removeLayer(dropMarker); dropMarker = null; }
 
-            // Drop marker with bounce animation
             const icon = createDropIcon();
             dropMarker = L.marker([lat, lng], { icon, zIndexOffset: 900 }).addTo(map);
             const el = dropMarker.getElement();
@@ -1204,12 +1207,10 @@
                 if (dropMarker) dropMarker.bindPopup(`<b>📍 ${shopName}</b>`).openPopup();
             }, 600);
 
-            // === PULSE WAVE - using CSS animation for smooth effect ===
             setTimeout(() => {
                 createPulseWave(lat, lng);
             }, 300);
 
-            // Fly to location
             map.flyTo([lat, lng], 15, { duration: 1.0 });
         }
 
@@ -1237,7 +1238,6 @@
             isBubbleDismissed = false;
         }
 
-        // Bubble button handlers
         bubbleTakeMe.addEventListener('click', function() {
             const id = bottomBubble.dataset.shopId;
             const loc = MASTER_LOCATIONS.find(l => l.id === id);
@@ -1266,7 +1266,6 @@
                     autoFitBounds();
                 }
 
-                // Only show bubble and drop on initial location
                 if (isFirstLocation || shouldFitBounds) {
                     const nearest = getNearestShop();
                     if (nearest) {
@@ -1302,7 +1301,6 @@
                     watchId = navigator.geolocation.watchPosition(
                         async (newPos) => {
                             userLocation = { lat: newPos.coords.latitude, lng: newPos.coords.longitude };
-                            // Just update markers and distances, don't refit or re-drop
                             renderUserMarker();
                             await renderSidebarWithRoadDistances();
                             updateStatusUI(true);
@@ -1402,7 +1400,7 @@
                 }
                 if (e.ctrlKey && e.shiftKey && e.key === 'L') { e.preventDefault(); getLocation(); }
                 if (e.ctrlKey && e.shiftKey && e.key === 'B') { e.preventDefault(); sidebar.classList.toggle('collapsed'); }
-                for (let i = 1; i <= 5; i++) {
+                for (let i = 1; i <= 6; i++) {
                     if (e.ctrlKey && e.shiftKey && e.key === String(i)) {
                         e.preventDefault();
                         flyToLocation(MASTER_LOCATIONS[i-1]);
@@ -1415,9 +1413,9 @@
         initMap();
         bindEvents();
         setTimeout(() => {
-            showToast('🦖 Monster Energy', 'Tap "Get My Location" to find the nearest shop', '🧃', 5000);
+            showToast('🦖 Monster Energy', '6 spots now! Tap "Get My Location" to find the nearest', '🧃', 5000);
         }, 1000);
-        console.log("✅ All fixed: Top toasts, bubble stays closed, no map shake, pulse wave NOW VISIBLE!");
+        console.log("✅ Added Patanjali Store - 6 locations total");
     })();
 </script>
 </body>
