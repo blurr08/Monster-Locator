@@ -697,7 +697,7 @@
             <div class="tagline">⚡ Dhule • Maharashtra</div>
         </div>
     </div>
-    <div class="city-badge">📍 7 spots •</div>
+    <div class="city-badge">📍 8 spots •</div>
     <div class="spot-container" id="spotList"></div>
     <div class="sidebar-footer">
         <button class="side-btn" id="refreshBtn">🔄 Refresh</button>
@@ -755,7 +755,7 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
     (function() {
-        // ----- SHOP DATA (7 locations) -----
+        // ----- SHOP DATA (8 locations) -----
         const SHOP_INFO = {
             spot_main: {
                 name: "Singhavis Sweet",
@@ -826,6 +826,16 @@
                 phone: "Number not provided",
                 hours: [{ day: "Monday - Saturday", time: "6:00 AM – 10:00 PM" }],
                 features: ["🥤 Monster Energy", "🥛 Fresh dairy products", "💳 Cash & UPI", "🚗 Parking available"]
+            },
+            spot_eighth: {
+                name: "New Store",
+                tag: "NEW",
+                emoji: "🛒",
+                description: "A newly added Monster Energy spot in Dhule. Grab your favorite energy drink here!",
+                address: "Near Dhule, Maharashtra",
+                phone: "Number not provided",
+                hours: [{ day: "Monday - Sunday", time: "9:00 AM – 9:00 PM" }],
+                features: ["🥤 Monster Energy", "💳 Cash & UPI", "🅿️ Parking available"]
             }
         };
 
@@ -836,7 +846,9 @@
             { id: "spot_fourth", name: "Just Chill", lat: 20.904041666666666, lng: 74.75639444444444, address: "Near Dhule Market", coordsDMS: "20°54'14.55\"N 74°45'23.02\"E", tag: "FOURTH" },
             { id: "spot_fifth", name: "Soda Pub", lat: 20.920369444444444, lng: 74.76649166666666, address: "North Dhule Area", coordsDMS: "20°55'13.33\"N 74°45'59.37\"E", tag: "FIFTH" },
             { id: "spot_sixth", name: "Patanjali Store", lat: 20.921294444444444, lng: 74.76615555555556, address: "North Dhule Area", coordsDMS: "20°55'16.66\"N 74°45'58.16\"E", tag: "NEW" },
-            { id: "spot_seventh", name: "Surendra Dudh Dairy", lat: 20.903647222222222, lng: 74.75239444444444, address: "Near Dhule Bus Stand", coordsDMS: "20°54'13.13\"N 74°45'08.62\"E", tag: "DAIRY" }
+            { id: "spot_seventh", name: "Surendra Dudh Dairy", lat: 20.903647222222222, lng: 74.75239444444444, address: "Near Dhule Bus Stand", coordsDMS: "20°54'13.13\"N 74°45'08.62\"E", tag: "DAIRY" },
+            // NEW: 20°54'57.15"N 74°45'36.76"E
+            { id: "spot_eighth", name: "New Store", lat: 20.915875, lng: 74.76021111111111, address: "Near Dhule", coordsDMS: "20°54'57.15\"N 74°45'36.76\"E", tag: "NEW" }
         ];
 
         let map;
@@ -1010,7 +1022,7 @@
             document.body.style.overflow = '';
         }
 
-        // ---- SIDEBAR RENDER (returns sorted list with road distances) ----
+        // ---- SIDEBAR RENDER ----
         async function renderSidebarWithRoadDistances() {
             if (!userLocation) {
                 renderSidebarFallback();
@@ -1050,7 +1062,7 @@
                 spotContainer.appendChild(card);
             });
             attachButtonEvents();
-            return locsWithDist; // return sorted list for bubble use
+            return locsWithDist;
         }
 
         function renderSidebarFallback() {
@@ -1215,7 +1227,7 @@
             map.flyTo([lat, lng], 15, { duration: 1.0 });
         }
 
-        // ---- BOTTOM BUBBLE (now accepts pre-calculated distance) ----
+        // ---- BOTTOM BUBBLE ----
         function showBottomBubble(shop, roadDistance) {
             if (isBubbleDismissed) return;
             if (!shop) return;
@@ -1224,11 +1236,9 @@
             bubbleTitle.textContent = shop.name;
             bubbleTag.textContent = shop.tag || 'SHOP';
             bubbleAddress.textContent = `📍 ${shop.address}`;
-            // Use the pre-calculated road distance
             if (roadDistance !== null && roadDistance !== undefined) {
                 bubbleDistance.textContent = `🚗 ${formatDistance(roadDistance)} away`;
             } else {
-                // Fallback to straight-line if road distance not available
                 const dist = distanceMeters(userLocation.lat, userLocation.lng, shop.lat, shop.lng);
                 bubbleDistance.textContent = `🚗 ${formatDistance(dist)} away (straight)`;
             }
@@ -1266,7 +1276,6 @@
             renderUserMarker();
             if (userLocation) {
                 roadDistanceCache.clear();
-                // Render sidebar and get sorted list with road distances
                 const sortedLocs = await renderSidebarWithRoadDistances();
                 updateStatusUI(true);
                 
@@ -1276,11 +1285,9 @@
 
                 if (isFirstLocation || shouldFitBounds) {
                     if (sortedLocs && sortedLocs.length > 0) {
-                        // Use the first item from sorted list (nearest by road distance)
                         const nearest = sortedLocs[0];
                         sidebar.classList.add('collapsed');
                         resetBubbleDismissal();
-                        // Pass the road distance to the bubble
                         showBottomBubble(nearest, nearest.roadDistance);
                         animateDropAndPulse(nearest.lat, nearest.lng, nearest.name);
                         const dist = nearest.roadDistance;
@@ -1411,7 +1418,7 @@
                 }
                 if (e.ctrlKey && e.shiftKey && e.key === 'L') { e.preventDefault(); getLocation(); }
                 if (e.ctrlKey && e.shiftKey && e.key === 'B') { e.preventDefault(); sidebar.classList.toggle('collapsed'); }
-                for (let i = 1; i <= 7; i++) {
+                for (let i = 1; i <= 8; i++) {
                     if (e.ctrlKey && e.shiftKey && e.key === String(i)) {
                         e.preventDefault();
                         flyToLocation(MASTER_LOCATIONS[i-1]);
@@ -1441,9 +1448,9 @@
         initMap();
         bindEvents();
         setTimeout(() => {
-            showToast('🦖 Monster Energy', '7 spots! Tap "Get My Location" to find the nearest', '🧃', 5000);
+            showToast('🦖 Monster Energy', '8 spots! Tap "Get My Location" to find the nearest', '🧃', 5000);
         }, 1000);
-        console.log("✅ Fixed: Bubble now shows the same road distance as sidebar cards");
+        console.log("✅ Added New Store (8th location)");
     })();
 </script>
 </body>
