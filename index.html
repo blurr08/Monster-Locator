@@ -830,13 +830,12 @@
         };
 
         const MASTER_LOCATIONS = [
-            { id: "spot_main", name: "Singavis Sweets", lat: 20.892272, lng: 74.773925, address: "Near Dhule City Center", coordsDMS: "20°53'32.18\"N 74°46'26.13\"E", tag: "Legendary" },
-            { id: "spot_square", name: "Amul Enterprises ", lat: 20.911280555555555, lng: 74.75695, address: "Tower Chowk, Dhule", coordsDMS: "20°54'40.61\"N 74°45'25.02\"E", tag: "Second" },
+            { id: "spot_main", name: "Singavis Sweets", lat: 20.892272, lng: 74.773925, address: "Near Dhule City Center", coordsDMS: "20°53'32.18\"N 74°46'26.13\"E", tag: "MAIN" },
+            { id: "spot_square", name: "Amul Enterprises ", lat: 20.911280555555555, lng: 74.75695, address: "Tower Chowk, Dhule", coordsDMS: "20°54'40.61\"N 74°45'25.02\"E", tag: "NEW" },
             { id: "spot_third", name: "Amul SSD", lat: 20.90357777777778, lng: 74.7496, address: "Near Dhule Bus Stand", coordsDMS: "20°54'12.88\"N 74°44'58.56\"E", tag: "THIRD" },
             { id: "spot_fourth", name: "Just Chill", lat: 20.904041666666666, lng: 74.75639444444444, address: "Near Dhule Market", coordsDMS: "20°54'14.55\"N 74°45'23.02\"E", tag: "FOURTH" },
             { id: "spot_fifth", name: "Soda Pub", lat: 20.920369444444444, lng: 74.76649166666666, address: "North Dhule Area", coordsDMS: "20°55'13.33\"N 74°45'59.37\"E", tag: "FIFTH" },
-            { id: "spot_sixth", name: "Patanjali Store", lat: 20.921294444444444, lng: 74.76615555555556, address: "North Dhule Area", coordsDMS: "20°55'16.66\"N 74°45'58.16\"E", tag: "Sixth" },
-            // NEW: Surendra Dudh Dairy
+            { id: "spot_sixth", name: "Patanjali Store", lat: 20.921294444444444, lng: 74.76615555555556, address: "North Dhule Area", coordsDMS: "20°55'16.66\"N 74°45'58.16\"E", tag: "NEW" },
             { id: "spot_seventh", name: "Surendra Dudh Dairy", lat: 20.903647222222222, lng: 74.75239444444444, address: "Near Dhule Bus Stand", coordsDMS: "20°54'13.13\"N 74°45'08.62\"E", tag: "DAIRY" }
         ];
 
@@ -940,16 +939,6 @@
             return dist;
         }
 
-        function getNearestShop() {
-            if (!userLocation || !MASTER_LOCATIONS.length) return null;
-            let nearest = null, minDist = Infinity;
-            for (const loc of MASTER_LOCATIONS) {
-                const d = distanceMeters(userLocation.lat, userLocation.lng, loc.lat, loc.lng);
-                if (d < minDist) { minDist = d; nearest = loc; }
-            }
-            return nearest;
-        }
-
         // ---- PULSE WAVE ----
         function createPulseWave(lat, lng) {
             const existingRings = pulseContainer.querySelectorAll('.pulse-ring');
@@ -1021,11 +1010,11 @@
             document.body.style.overflow = '';
         }
 
-        // ---- SIDEBAR RENDER ----
+        // ---- SIDEBAR RENDER (returns sorted list with road distances) ----
         async function renderSidebarWithRoadDistances() {
             if (!userLocation) {
                 renderSidebarFallback();
-                return;
+                return null;
             }
             const locsWithDist = await Promise.all(MASTER_LOCATIONS.map(async (loc) => {
                 const roadDist = await getRoadDistance(loc);
@@ -1061,6 +1050,7 @@
                 spotContainer.appendChild(card);
             });
             attachButtonEvents();
+            return locsWithDist; // return sorted list for bubble use
         }
 
         function renderSidebarFallback() {
@@ -1225,8 +1215,8 @@
             map.flyTo([lat, lng], 15, { duration: 1.0 });
         }
 
-        // ---- BOTTOM BUBBLE ----
-        function showBottomBubble(shop) {
+        // ---- BOTTOM BUBBLE (now accepts pre-calculated distance) ----
+        function showBottomBubble(shop, roadDistance) {
             if (isBubbleDismissed) return;
             if (!shop) return;
             const info = SHOP_INFO[shop.id];
@@ -1234,8 +1224,14 @@
             bubbleTitle.textContent = shop.name;
             bubbleTag.textContent = shop.tag || 'SHOP';
             bubbleAddress.textContent = `📍 ${shop.address}`;
-            const dist = distanceMeters(userLocation.lat, userLocation.lng, shop.lat, shop.lng);
-            bubbleDistance.textContent = `🚗 ${formatDistance(dist)} away`;
+            // Use the pre-calculated road distance
+            if (roadDistance !== null && roadDistance !== undefined) {
+                bubbleDistance.textContent = `🚗 ${formatDistance(roadDistance)} away`;
+            } else {
+                // Fallback to straight-line if road distance not available
+                const dist = distanceMeters(userLocation.lat, userLocation.lng, shop.lat, shop.lng);
+                bubbleDistance.textContent = `🚗 ${formatDistance(dist)} away (straight)`;
+            }
             bottomBubble.dataset.shopId = shop.id;
             bottomBubble.classList.add('show');
         }
@@ -1270,7 +1266,8 @@
             renderUserMarker();
             if (userLocation) {
                 roadDistanceCache.clear();
-                await renderSidebarWithRoadDistances();
+                // Render sidebar and get sorted list with road distances
+                const sortedLocs = await renderSidebarWithRoadDistances();
                 updateStatusUI(true);
                 
                 if (shouldFitBounds) {
@@ -1278,13 +1275,15 @@
                 }
 
                 if (isFirstLocation || shouldFitBounds) {
-                    const nearest = getNearestShop();
-                    if (nearest) {
+                    if (sortedLocs && sortedLocs.length > 0) {
+                        // Use the first item from sorted list (nearest by road distance)
+                        const nearest = sortedLocs[0];
                         sidebar.classList.add('collapsed');
                         resetBubbleDismissal();
-                        showBottomBubble(nearest);
+                        // Pass the road distance to the bubble
+                        showBottomBubble(nearest, nearest.roadDistance);
                         animateDropAndPulse(nearest.lat, nearest.lng, nearest.name);
-                        const dist = distanceMeters(userLocation.lat, userLocation.lng, nearest.lat, nearest.lng);
+                        const dist = nearest.roadDistance;
                         showToast('📍 Nearest Shop Found', `${nearest.name} — ${formatDistance(dist)} away`, '🧃', 4000);
                     }
                     isFirstLocation = false;
@@ -1390,8 +1389,9 @@
             toastDiv.addEventListener('click', (e) => {
                 if (e.target === closeToast) return;
                 if (userLocation) {
-                    const nearest = getNearestShop();
-                    if (nearest) flyToLocation(nearest);
+                    // Find nearest by road distance
+                    const sorted = getSortedLocsSync();
+                    if (sorted && sorted.length > 0) flyToLocation(sorted[0]);
                 } else {
                     flyToLocation(MASTER_LOCATIONS[0]);
                 }
@@ -1420,13 +1420,30 @@
             });
         }
 
+        // Helper to get sorted list synchronously using cache
+        function getSortedLocsSync() {
+            if (!userLocation) return null;
+            const withDist = MASTER_LOCATIONS.map(loc => {
+                const key = `${loc.id}_${userLocation.lat.toFixed(4)}_${userLocation.lng.toFixed(4)}`;
+                const cached = roadDistanceCache.get(key);
+                return { ...loc, roadDistance: cached };
+            });
+            withDist.sort((a, b) => {
+                if (a.roadDistance === null && b.roadDistance === null) return 0;
+                if (a.roadDistance === null) return 1;
+                if (b.roadDistance === null) return -1;
+                return a.roadDistance - b.roadDistance;
+            });
+            return withDist;
+        }
+
         // ---- START ----
         initMap();
         bindEvents();
         setTimeout(() => {
-            showToast('Monster Energy', '7 spots now! Tap "Get My Location" to find the nearest', '🧃', 5000);
+            showToast('🦖 Monster Energy', '7 spots! Tap "Get My Location" to find the nearest', '🧃', 5000);
         }, 1000);
-        console.log("✅ Added Surendra Dudh Dairy - 7 locations total");
+        console.log("✅ Fixed: Bubble now shows the same road distance as sidebar cards");
     })();
 </script>
 </body>
