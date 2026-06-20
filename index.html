@@ -697,7 +697,7 @@
             <div class="tagline">⚡ Dhule • Maharashtra</div>
         </div>
     </div>
-    <div class="city-badge">📍 6 spots •</div>
+    <div class="city-badge">📍 7 spots •</div>
     <div class="spot-container" id="spotList"></div>
     <div class="sidebar-footer">
         <button class="side-btn" id="refreshBtn">🔄 Refresh</button>
@@ -755,7 +755,7 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
     (function() {
-        // ----- SHOP DATA (6 locations) -----
+        // ----- SHOP DATA (7 locations) -----
         const SHOP_INFO = {
             spot_main: {
                 name: "Singhavis Sweet",
@@ -816,6 +816,16 @@
                 phone: "Number not provided",
                 hours: [{ day: "Monday - Sunday", time: "9:00 AM – 9:00 PM" }],
                 features: ["🥤 Monster Energy", "🌿 Ayurvedic products", "💳 Cash & UPI", "🅿️ Parking available"]
+            },
+            spot_seventh: {
+                name: "Surendra Dudh Dairy",
+                tag: "DAIRY",
+                emoji: "🥛",
+                description: "A local dairy shop now serving Monster Energy drinks. Fresh milk and energy drinks – the perfect combination!",
+                address: "Near Dhule Bus Stand, Dhule, Maharashtra",
+                phone: "Number not provided",
+                hours: [{ day: "Monday - Saturday", time: "6:00 AM – 10:00 PM" }],
+                features: ["🥤 Monster Energy", "🥛 Fresh dairy products", "💳 Cash & UPI", "🚗 Parking available"]
             }
         };
 
@@ -825,8 +835,9 @@
             { id: "spot_third", name: "Amul SSD", lat: 20.90357777777778, lng: 74.7496, address: "Near Dhule Bus Stand", coordsDMS: "20°54'12.88\"N 74°44'58.56\"E", tag: "THIRD" },
             { id: "spot_fourth", name: "Just Chill", lat: 20.904041666666666, lng: 74.75639444444444, address: "Near Dhule Market", coordsDMS: "20°54'14.55\"N 74°45'23.02\"E", tag: "FOURTH" },
             { id: "spot_fifth", name: "Soda Pub", lat: 20.920369444444444, lng: 74.76649166666666, address: "North Dhule Area", coordsDMS: "20°55'13.33\"N 74°45'59.37\"E", tag: "FIFTH" },
-            // NEW LOCATION: Patanjali Store
-            { id: "spot_sixth", name: "Patanjali Store", lat: 20.921294444444444, lng: 74.76615555555556, address: "North Dhule Area, Dhule", coordsDMS: "20°55'16.66\"N 74°45'58.16\"E", tag: "NEW" }
+            { id: "spot_sixth", name: "Patanjali Store", lat: 20.921294444444444, lng: 74.76615555555556, address: "North Dhule Area", coordsDMS: "20°55'16.66\"N 74°45'58.16\"E", tag: "NEW" },
+            // NEW: Surendra Dudh Dairy
+            { id: "spot_seventh", name: "Surendra Dudh Dairy", lat: 20.903647222222222, lng: 74.75239444444444, address: "Near Dhule Bus Stand", coordsDMS: "20°54'13.13\"N 74°45'08.62\"E", tag: "DAIRY" }
         ];
 
         let map;
@@ -1400,7 +1411,7 @@
                 }
                 if (e.ctrlKey && e.shiftKey && e.key === 'L') { e.preventDefault(); getLocation(); }
                 if (e.ctrlKey && e.shiftKey && e.key === 'B') { e.preventDefault(); sidebar.classList.toggle('collapsed'); }
-                for (let i = 1; i <= 6; i++) {
+                for (let i = 1; i <= 7; i++) {
                     if (e.ctrlKey && e.shiftKey && e.key === String(i)) {
                         e.preventDefault();
                         flyToLocation(MASTER_LOCATIONS[i-1]);
@@ -1413,9 +1424,9 @@
         initMap();
         bindEvents();
         setTimeout(() => {
-            showToast('🦖 Monster Energy', '6 spots now! Tap "Get My Location" to find the nearest', '🧃', 5000);
+            showToast('🦖 Monster Energy', '7 spots now! Tap "Get My Location" to find the nearest', '🧃', 5000);
         }, 1000);
-        console.log("✅ Added Patanjali Store - 6 locations total");
+        console.log("✅ Added Surendra Dudh Dairy - 7 locations total");
     })();
 </script>
 </body>
