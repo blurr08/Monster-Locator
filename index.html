@@ -264,8 +264,7 @@
         }
         #fab-locate { bottom: 90px; }
         #fab-toggle-sidebar { bottom: 150px; }
-        
-        /* ===== TOP TOAST ===== */
+
         .toast-notify {
             position: fixed;
             z-index: 200;
@@ -328,7 +327,7 @@
             opacity: 1;
             background: rgba(255,255,255,0.1);
         }
-        
+
         .location-status {
             position: fixed;
             z-index: 15;
@@ -353,7 +352,6 @@
         }
         .dot.active { background: #4caf50; }
 
-        /* ---- SHOP INFO POPUP ---- */
         .info-overlay {
             position: fixed;
             inset: 0;
@@ -468,7 +466,6 @@
         .info-popup::-webkit-scrollbar-track { background:transparent; }
         .info-popup::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.3); border-radius:10px; }
 
-        /* ---- BOTTOM BUBBLE ---- */
         #bottomBubble {
             position: fixed;
             bottom: 24px;
@@ -570,7 +567,7 @@
         #bottomBubble .btn-route { background: rgba(40,167,69,0.85); }
         #bottomBubble .btn-info { background: rgba(255,193,7,0.85); }
 
-        /* ---- PULSE WAVE ANIMATION ---- */
+        /* ===== GLOWING PULSE WAVE ===== */
         .pulse-wave-container {
             position: fixed;
             pointer-events: none;
@@ -583,29 +580,72 @@
         }
         .pulse-ring {
             position: absolute;
-            border: 4px solid rgba(66, 133, 244, 0.8);
             border-radius: 50%;
-            background: rgba(66, 133, 244, 0.05);
-            box-shadow: 0 0 40px rgba(66, 133, 244, 0.2);
-            animation: pulseExpand 2.5s ease-out forwards;
+            background: radial-gradient(circle, rgba(66, 133, 244, 0.5) 0%, rgba(66, 133, 244, 0.15) 30%, transparent 70%);
+            box-shadow: 0 0 60px rgba(66, 133, 244, 0.3), 0 0 120px rgba(66, 133, 244, 0.1);
+            animation: pulseExpand 2.8s ease-out forwards;
             transform: translate(-50%, -50%);
+            border: none;
         }
         @keyframes pulseExpand {
             0% {
-                width: 30px;
-                height: 30px;
+                width: 20px;
+                height: 20px;
                 opacity: 1;
-                border-width: 4px;
+                background: radial-gradient(circle, rgba(66, 133, 244, 0.7) 0%, rgba(66, 133, 244, 0.2) 40%, transparent 70%);
+                box-shadow: 0 0 40px rgba(66, 133, 244, 0.5);
             }
             100% {
-                width: 2500px;
-                height: 2500px;
+                width: 1800px;
+                height: 1800px;
                 opacity: 0;
-                border-width: 1px;
+                background: radial-gradient(circle, rgba(66, 133, 244, 0.1) 0%, transparent 60%);
+                box-shadow: 0 0 80px rgba(66, 133, 244, 0);
             }
         }
 
-        /* ---- RESPONSIVE ---- */
+        /* ===== GLOWING DOT WITH BREATHING ===== */
+        .drop-marker {
+            width: 40px;
+            height: 40px;
+            position: relative;
+            pointer-events: none;
+        }
+        .drop-marker .dot {
+            width: 20px;
+            height: 20px;
+            background: #4285f4;
+            border-radius: 50%;
+            border: 3px solid white;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 2;
+            box-shadow: 0 0 0 0 rgba(66, 133, 244, 0.7);
+            animation: breathing-glow 1.8s ease-in-out infinite;
+        }
+        .drop-marker .glow {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(66, 133, 244, 0.4) 0%, rgba(66, 133, 244, 0.1) 50%, transparent 70%);
+            position: absolute;
+            top: 0;
+            left: 0;
+            animation: pulse-glow 2s ease-out infinite;
+        }
+        @keyframes breathing-glow {
+            0% { box-shadow: 0 0 0 0 rgba(66, 133, 244, 0.7); }
+            50% { box-shadow: 0 0 0 12px rgba(66, 133, 244, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(66, 133, 244, 0.7); }
+        }
+        @keyframes pulse-glow {
+            0% { transform: scale(1); opacity: 0.6; }
+            50% { transform: scale(1.6); opacity: 0.1; }
+            100% { transform: scale(1); opacity: 0.6; }
+        }
+
         @media (max-width: 640px) {
             #sidebar { left: 12px; right: 12px; width: auto; top: auto; bottom: 12px; transform: translateY(0); max-height: 55vh; }
             #sidebar.collapsed { transform: translateY(110%); }
@@ -624,26 +664,12 @@
             .bubble-actions .btn-info { font-size: 0.7rem; padding: 8px 12px; min-width: 60px; }
             .bubble-title { font-size: 1rem; }
             .toast-notify { padding: 14px 20px; font-size: 0.85rem; top: 15px; }
-            .toast-notify .toast-icon { font-size: 1.4rem; }
-            .toast-notify .toast-title { font-size: 0.95rem; }
-            .toast-notify .toast-sub { font-size: 0.75rem; }
-            @keyframes pulseExpand {
-                0% { width: 20px; height: 20px; }
-                100% { width: 1200px; height: 1200px; }
-            }
+            @keyframes pulseExpand { 0% { width: 20px; height: 20px; } 100% { width: 1000px; height: 1000px; } }
         }
         .monster-card.nearest {
             border: 1px solid #ffcc00;
             background: rgba(255, 215, 0, 0.15);
             box-shadow: 0 0 12px rgba(255, 215, 0, 0.3);
-        }
-        .distance-loading {
-            opacity: 0.7;
-            animation: pulse 1s infinite;
-        }
-        @keyframes pulse {
-            0%, 100% { opacity: 0.7; }
-            50% { opacity: 1; }
         }
         @keyframes dropBounce {
             0% { transform: translateY(-300px) scale(0.5) rotate(-10deg); opacity:0; }
@@ -686,7 +712,6 @@
 <div id="map"></div>
 <div class="location-status" id="locationStatus"><span class="dot" id="statusDot"></span><span id="statusText">Location off</span></div>
 
-<!-- PULSE WAVE CONTAINER -->
 <div class="pulse-wave-container" id="pulseContainer"></div>
 
 <aside id="sidebar">
@@ -705,7 +730,6 @@
     </div>
 </aside>
 
-<!-- BOTTOM BUBBLE -->
 <div id="bottomBubble">
     <button class="bubble-close" id="bubbleClose">✕</button>
     <div class="bubble-header">
@@ -722,7 +746,6 @@
     </div>
 </div>
 
-<!-- SHOP INFO POPUP -->
 <div class="info-overlay" id="infoOverlay">
     <div class="info-popup" id="infoPopup">
         <div class="info-popup-header">
@@ -737,7 +760,6 @@
     </div>
 </div>
 
-<!-- TOP TOAST -->
 <div id="globalToast" class="toast-notify">
     <span class="toast-icon" id="toastIcon">🧃</span>
     <div class="toast-content">
@@ -755,7 +777,6 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
     (function() {
-        // ----- SHOP DATA (8 locations) -----
         const SHOP_INFO = {
             spot_main: {
                 name: "Singhavis Sweet",
@@ -847,23 +868,13 @@
             { id: "spot_fifth", name: "Soda Pub", lat: 20.920369444444444, lng: 74.76649166666666, address: "North Dhule Area", coordsDMS: "20°55'13.33\"N 74°45'59.37\"E", tag: "FIFTH" },
             { id: "spot_sixth", name: "Patanjali Store", lat: 20.921294444444444, lng: 74.76615555555556, address: "North Dhule Area", coordsDMS: "20°55'16.66\"N 74°45'58.16\"E", tag: "NEW" },
             { id: "spot_seventh", name: "Surendra Dudh Dairy", lat: 20.903647222222222, lng: 74.75239444444444, address: "Near Dhule Bus Stand", coordsDMS: "20°54'13.13\"N 74°45'08.62\"E", tag: "DAIRY" },
-            // NEW: 20°54'57.15"N 74°45'36.76"E
             { id: "spot_eighth", name: "New Store", lat: 20.915875, lng: 74.76021111111111, address: "Near Dhule", coordsDMS: "20°54'57.15\"N 74°45'36.76\"E", tag: "NEW" }
         ];
 
-        let map;
-        let markers = [];
-        let userMarker = null;
-        let userLocation = null;
-        let watchId = null;
-        let manualFlyInProgress = false;
-        let userInteracting = false;
-        let roadDistanceCache = new Map();
-        let dropMarker = null;
-        let isBubbleDismissed = false;
-        let isFirstLocation = true;
+        let map, markers = [], userMarker = null, userLocation = null, watchId = null;
+        let manualFlyInProgress = false, userInteracting = false, roadDistanceCache = new Map();
+        let dropMarker = null, isBubbleDismissed = false, isFirstLocation = true;
 
-        // DOM elements
         const spotContainer = document.getElementById('spotList');
         const locateBtn = document.getElementById('locateMeBtn');
         const refreshBtn = document.getElementById('refreshBtn');
@@ -897,16 +908,13 @@
         const pulseContainer = document.getElementById('pulseContainer');
 
         let toastTimer = null;
-        
         function showToast(title, message, icon = '🧃', duration = 4000) {
             toastIcon.textContent = icon;
             toastTitle.textContent = title;
             toastMsgSpan.textContent = message;
             toastDiv.classList.add('show');
             if (toastTimer) clearTimeout(toastTimer);
-            toastTimer = setTimeout(() => {
-                toastDiv.classList.remove('show');
-            }, duration);
+            toastTimer = setTimeout(() => toastDiv.classList.remove('show'), duration);
         }
 
         function updateStatusUI(active) {
@@ -951,7 +959,7 @@
             return dist;
         }
 
-        // ---- PULSE WAVE ----
+        // ---- GLOWING PULSE WAVE ----
         function createPulseWave(lat, lng) {
             const existingRings = pulseContainer.querySelectorAll('.pulse-ring');
             existingRings.forEach(el => el.remove());
@@ -963,53 +971,46 @@
             ring.style.top = point.y + 'px';
             pulseContainer.appendChild(ring);
 
-            setTimeout(() => {
-                if (ring.parentNode) ring.remove();
-            }, 2800);
+            setTimeout(() => { if (ring.parentNode) ring.remove(); }, 3000);
+        }
+
+        // ---- GLOWING DROP MARKER ----
+        function createDropIcon() {
+            const html = `
+                <div class="drop-marker">
+                    <div class="glow"></div>
+                    <div class="dot"></div>
+                </div>
+            `;
+            return L.divIcon({
+                html: html,
+                className: '',
+                iconSize: [40, 40],
+                iconAnchor: [20, 20],
+                popupAnchor: [0, -20]
+            });
         }
 
         // ---- SHOP INFO POPUP ----
         function openShopInfo(shopId) {
             const info = SHOP_INFO[shopId];
-            if (!info) {
-                showToast('⚠️ Info Unavailable', 'This shop has no details yet.', '📋', 3000);
-                return;
-            }
+            if (!info) { showToast('⚠️ Info Unavailable', 'This shop has no details yet.', '📋', 3000); return; }
             popupShopName.textContent = info.name;
             popupShopTag.textContent = info.tag || 'SHOP';
             let html = `
-                <div class="field">
-                    <span class="field-label">📍 Address</span>
-                    <span class="field-value">${escapeHtml(info.address)}</span>
-                </div>
-                <div class="field">
-                    <span class="field-label">📞 Phone</span>
-                    <span class="field-value">${escapeHtml(info.phone || 'N/A')}</span>
-                </div>
+                <div class="field"><span class="field-label">📍 Address</span><span class="field-value">${escapeHtml(info.address)}</span></div>
+                <div class="field"><span class="field-label">📞 Phone</span><span class="field-value">${escapeHtml(info.phone || 'N/A')}</span></div>
                 <hr class="divider">
-                <div class="field">
-                    <div style="font-weight:700; color:#ffd966; margin-bottom:6px;">📖 Description</div>
-                    <div style="font-style:italic; color:#ccc;">${escapeHtml(info.description || 'No description available.')}</div>
-                </div>
+                <div class="field"><div style="font-weight:700; color:#ffd966; margin-bottom:6px;">📖 Description</div><div style="font-style:italic; color:#ccc;">${escapeHtml(info.description || 'No description available.')}</div></div>
                 <hr class="divider">
-                <div class="field">
-                    <div style="font-weight:700; color:#ffd966; margin-bottom:6px;">🕒 Opening Hours</div>
-            `;
+                <div class="field"><div style="font-weight:700; color:#ffd966; margin-bottom:6px;">🕒 Opening Hours</div>`;
             if (info.hours && info.hours.length) {
-                info.hours.forEach(h => {
-                    if (h.day) {
-                        html += `<div class="shop-hours"><span>${escapeHtml(h.day)}</span><span>${escapeHtml(h.time)}</span></div>`;
-                    }
-                });
-            } else {
-                html += `<div style="color:#999;">Hours not available</div>`;
-            }
+                info.hours.forEach(h => { if (h.day) { html += `<div class="shop-hours"><span>${escapeHtml(h.day)}</span><span>${escapeHtml(h.time)}</span></div>`; } });
+            } else { html += `<div style="color:#999;">Hours not available</div>`; }
             html += `</div>`;
             if (info.features && info.features.length) {
                 html += `<hr class="divider"><div class="field"><div style="font-weight:700; color:#ffd966; margin-bottom:6px;">✨ Features</div><div style="display:flex; flex-wrap:wrap; gap:6px;">`;
-                info.features.forEach(f => {
-                    html += `<span style="background:rgba(255,255,255,0.08); padding:4px 12px; border-radius:20px; font-size:0.8rem;">${escapeHtml(f)}</span>`;
-                });
+                info.features.forEach(f => { html += `<span style="background:rgba(255,255,255,0.08); padding:4px 12px; border-radius:20px; font-size:0.8rem;">${escapeHtml(f)}</span>`; });
                 html += `</div></div>`;
             }
             popupBody.innerHTML = html;
@@ -1017,17 +1018,11 @@
             document.body.style.overflow = 'hidden';
         }
 
-        function closeShopInfo() {
-            infoOverlay.classList.remove('active');
-            document.body.style.overflow = '';
-        }
+        function closeShopInfo() { infoOverlay.classList.remove('active'); document.body.style.overflow = ''; }
 
         // ---- SIDEBAR RENDER ----
         async function renderSidebarWithRoadDistances() {
-            if (!userLocation) {
-                renderSidebarFallback();
-                return null;
-            }
+            if (!userLocation) { renderSidebarFallback(); return null; }
             const locsWithDist = await Promise.all(MASTER_LOCATIONS.map(async (loc) => {
                 const roadDist = await getRoadDistance(loc);
                 return { ...loc, roadDistance: roadDist };
@@ -1045,9 +1040,7 @@
                 if (idx === 0) card.classList.add('nearest');
                 const distanceText = (loc.roadDistance !== null) ? `🚗 ${formatDistance(loc.roadDistance)}` : '⚠️ route unavailable';
                 card.innerHTML = `
-                    <div class="spot-name">
-                        🧃 ${escapeHtml(loc.name)} <span>${escapeHtml(loc.tag)}</span>
-                    </div>
+                    <div class="spot-name">🧃 ${escapeHtml(loc.name)} <span>${escapeHtml(loc.tag)}</span></div>
                     <div class="address-detail">📍 ${escapeHtml(loc.address)}</div>
                     <div class="coords-text">🧭 ${loc.coordsDMS}</div>
                     <div class="action-row">
@@ -1071,9 +1064,7 @@
                 const card = document.createElement('div');
                 card.className = 'monster-card';
                 card.innerHTML = `
-                    <div class="spot-name">
-                        🧃 ${escapeHtml(loc.name)} <span>${escapeHtml(loc.tag)}</span>
-                    </div>
+                    <div class="spot-name">🧃 ${escapeHtml(loc.name)} <span>${escapeHtml(loc.tag)}</span></div>
                     <div class="address-detail">📍 ${escapeHtml(loc.address)}</div>
                     <div class="coords-text">🧭 ${loc.coordsDMS}</div>
                     <div class="action-row">
@@ -1105,50 +1096,23 @@
             });
         }
 
-        function takeMeHandler(e) {
-            e.stopPropagation();
-            const id = e.currentTarget.getAttribute('data-id');
-            const loc = MASTER_LOCATIONS.find(l => l.id === id);
-            if (loc) flyToLocation(loc);
-        }
-        function routeHandler(e) {
-            e.stopPropagation();
-            const id = e.currentTarget.getAttribute('data-id');
-            const loc = MASTER_LOCATIONS.find(l => l.id === id);
-            if (loc) openGoogleMapsRoute(loc.lat, loc.lng, loc.name);
-        }
-        function infoHandler(e) {
-            e.stopPropagation();
-            const id = e.currentTarget.getAttribute('data-id');
-            openShopInfo(id);
-        }
+        function takeMeHandler(e) { e.stopPropagation(); const id = e.currentTarget.getAttribute('data-id'); const loc = MASTER_LOCATIONS.find(l => l.id === id); if (loc) flyToLocation(loc); }
+        function routeHandler(e) { e.stopPropagation(); const id = e.currentTarget.getAttribute('data-id'); const loc = MASTER_LOCATIONS.find(l => l.id === id); if (loc) openGoogleMapsRoute(loc.lat, loc.lng, loc.name); }
+        function infoHandler(e) { e.stopPropagation(); const id = e.currentTarget.getAttribute('data-id'); openShopInfo(id); }
 
-        function escapeHtml(str) {
-            const div = document.createElement('div');
-            div.textContent = str;
-            return div.innerHTML;
-        }
+        function escapeHtml(str) { const div = document.createElement('div'); div.textContent = str; return div.innerHTML; }
 
         function openGoogleMapsRoute(destLat, destLng, destName) {
-            if (!userLocation) {
-                showToast('📍 Location Required', 'Please enable location first.', '📍', 3000);
-                return;
-            }
+            if (!userLocation) { showToast('📍 Location Required', 'Please enable location first.', '📍', 3000); return; }
             const origin = `${userLocation.lat},${userLocation.lng}`;
             const destination = `${destLat},${destLng}`;
-            const url = `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${destination}&travelmode=driving`;
-            window.open(url, '_blank');
+            window.open(`https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${destination}&travelmode=driving`, '_blank');
             showToast('🧭 Route Opened', `Directions to ${destName} in Google Maps`, '🗺️', 3000);
         }
 
         function createMonsterIcon() {
             const html = `<div style="width:36px;height:36px;background:radial-gradient(circle at 30% 35%, #1ecc00, #006600);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:1.4rem;color:white;font-family:'Impact',sans-serif;border:2px solid #ffcc00;box-shadow:0 0 0 2px black;">M</div>`;
             return L.divIcon({ html, iconSize: [36,36], iconAnchor: [18,18], popupAnchor: [0, -20] });
-        }
-
-        function createDropIcon() {
-            const html = `<div style="width:28px;height:28px;background:#4285f4;border-radius:50%;border:3px solid white;box-shadow:0 0 0 6px rgba(66,133,244,0.3), 0 0 0 12px rgba(66,133,244,0.15);"></div>`;
-            return L.divIcon({ html, iconSize: [28,28], iconAnchor: [14,14] });
         }
 
         function createUserIcon() {
@@ -1187,10 +1151,7 @@
                 if (markerObj) {
                     markerObj.marker.openPopup();
                     const el = markerObj.marker.getElement();
-                    if (el) {
-                        el.style.transform = 'scale(1.3)';
-                        setTimeout(() => { if (el) el.style.transform = ''; }, 400);
-                    }
+                    if (el) { el.style.transform = 'scale(1.3)'; setTimeout(() => { if (el) el.style.transform = ''; }, 400); }
                 }
                 setTimeout(() => { manualFlyInProgress = false; }, 1500);
             }, 300);
@@ -1205,25 +1166,30 @@
             map.fitBounds(L.latLngBounds(allPoints), { padding: [60, 60] });
         }
 
-        // ---- DROP & PULSE ----
+        // ---- DROP + PULSE + BREATHING GLOW ----
         function animateDropAndPulse(lat, lng, shopName) {
             if (dropMarker) { map.removeLayer(dropMarker); dropMarker = null; }
 
+            // Create the glowing drop marker
             const icon = createDropIcon();
             dropMarker = L.marker([lat, lng], { icon, zIndexOffset: 900 }).addTo(map);
+            // Add bounce animation class
             const el = dropMarker.getElement();
             if (el) {
                 el.classList.add('marker-drop');
                 setTimeout(() => { if (el) el.classList.remove('marker-drop'); }, 1000);
             }
+            // Open popup after drop
             setTimeout(() => {
                 if (dropMarker) dropMarker.bindPopup(`<b>📍 ${shopName}</b>`).openPopup();
             }, 600);
 
+            // Trigger the glow pulse wave
             setTimeout(() => {
                 createPulseWave(lat, lng);
             }, 300);
 
+            // Fly to the location (zoom in)
             map.flyTo([lat, lng], 15, { duration: 1.0 });
         }
 
@@ -1246,14 +1212,8 @@
             bottomBubble.classList.add('show');
         }
 
-        function hideBottomBubble() {
-            bottomBubble.classList.remove('show');
-            isBubbleDismissed = true;
-        }
-
-        function resetBubbleDismissal() {
-            isBubbleDismissed = false;
-        }
+        function hideBottomBubble() { bottomBubble.classList.remove('show'); isBubbleDismissed = true; }
+        function resetBubbleDismissal() { isBubbleDismissed = false; }
 
         bubbleTakeMe.addEventListener('click', function() {
             const id = bottomBubble.dataset.shopId;
@@ -1278,11 +1238,7 @@
                 roadDistanceCache.clear();
                 const sortedLocs = await renderSidebarWithRoadDistances();
                 updateStatusUI(true);
-                
-                if (shouldFitBounds) {
-                    autoFitBounds();
-                }
-
+                if (shouldFitBounds) autoFitBounds();
                 if (isFirstLocation || shouldFitBounds) {
                     if (sortedLocs && sortedLocs.length > 0) {
                         const nearest = sortedLocs[0];
@@ -1304,10 +1260,7 @@
 
         // ---- GET LOCATION ----
         function getLocation() {
-            if (!navigator.geolocation) {
-                showToast('⚠️ Unsupported', 'Your browser does not support geolocation.', '📍', 3000);
-                return;
-            }
+            if (!navigator.geolocation) { showToast('⚠️ Unsupported', 'Your browser does not support geolocation.', '📍', 3000); return; }
             showToast('📍 Locating...', 'Requesting your location...', '📍', 2000);
             statusText.innerText = 'Requesting...';
             navigator.geolocation.getCurrentPosition(
@@ -1347,9 +1300,7 @@
         // ---- REFRESH ----
         function refreshMap() {
             renderMarkers();
-            if (userLocation) {
-                refreshUIAfterLocation(true);
-            } else {
+            if (userLocation) { refreshUIAfterLocation(true); } else {
                 renderSidebarFallback();
                 updateStatusUI(false);
                 hideBottomBubble();
@@ -1372,14 +1323,9 @@
             renderMarkers();
             renderSidebarFallback();
             updateStatusUI(false);
-            map.on('dblclick', () => {
-                modal.classList.add('active');
-                setTimeout(() => modal.classList.remove('active'), 3000);
-            });
+            map.on('dblclick', () => { modal.classList.add('active'); setTimeout(() => modal.classList.remove('active'), 3000); });
             map.on('dragstart zoomstart', () => { userInteracting = true; });
-            map.on('dragend zoomend', () => {
-                setTimeout(() => { userInteracting = false; }, 500);
-            });
+            map.on('dragend zoomend', () => { setTimeout(() => { userInteracting = false; }, 500); });
         }
 
         // ---- BIND EVENTS ----
@@ -1388,28 +1334,19 @@
             refreshBtn.addEventListener('click', refreshMap);
             fabLocate.addEventListener('click', getLocation);
             fabToggle.addEventListener('click', () => sidebar.classList.toggle('collapsed'));
-            closeToast.addEventListener('click', (e) => {
-                e.stopPropagation();
-                toastDiv.classList.remove('show');
-                if (toastTimer) clearTimeout(toastTimer);
-            });
+            closeToast.addEventListener('click', (e) => { e.stopPropagation(); toastDiv.classList.remove('show'); if (toastTimer) clearTimeout(toastTimer); });
             toastDiv.addEventListener('click', (e) => {
                 if (e.target === closeToast) return;
                 if (userLocation) {
-                    // Find nearest by road distance
                     const sorted = getSortedLocsSync();
                     if (sorted && sorted.length > 0) flyToLocation(sorted[0]);
-                } else {
-                    flyToLocation(MASTER_LOCATIONS[0]);
-                }
+                } else { flyToLocation(MASTER_LOCATIONS[0]); }
                 toastDiv.classList.remove('show');
             });
             modalClose.addEventListener('click', () => modal.classList.remove('active'));
             modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.remove('active'); });
             infoCloseBtn.addEventListener('click', closeShopInfo);
-            infoOverlay.addEventListener('click', (e) => {
-                if (e.target === infoOverlay) closeShopInfo();
-            });
+            infoOverlay.addEventListener('click', (e) => { if (e.target === infoOverlay) closeShopInfo(); });
             document.addEventListener('keydown', (e) => {
                 if (e.key === 'Escape') {
                     if (infoOverlay.classList.contains('active')) closeShopInfo();
@@ -1427,7 +1364,6 @@
             });
         }
 
-        // Helper to get sorted list synchronously using cache
         function getSortedLocsSync() {
             if (!userLocation) return null;
             const withDist = MASTER_LOCATIONS.map(loc => {
@@ -1444,14 +1380,13 @@
             return withDist;
         }
 
-        // ---- START ----
         initMap();
         bindEvents();
         setTimeout(() => {
-            showToast('🦖 Monster Energy', '8 spots! Tap "Get My Location" to find the nearest', '🧃', 5000);
+            showToast('🦁 Glowing Drop & Pulse', 'Tap "Get My Location" to see the magic', '✨', 5000);
         }, 1000);
-        console.log("✅ Added New Store (8th location)");
+        console.log("✅ Glowing dot with breathing animation + radiant pulse wave.");
     })();
 </script>
 </body>
-</html>
+    </html>
